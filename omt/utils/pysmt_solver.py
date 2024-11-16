@@ -71,27 +71,6 @@ class PySMTSolver(z3.Solver):
         except Exception:
             return z3.unknown
 
-    def check_portfolio(self):
-        """
-        Use multiple solvers (in parallel?)
-        """
-        z3fml = z3.And(self.assertions())
-        pysmt_vars, pysmt_fml = PySMTSolver.convert(z3fml)
-        f_logic = get_logic(pysmt_fml)
-
-        with Portfolio([("msat", {"random_seed": 1}),
-                        ("msat", {"random_seed": 17}),
-                        ("msat", {"random_seed": 42}),
-                        "cvc4", "yices"],
-                       logic=f_logic,
-                       incremental=False,
-                       generate_models=False) as solver:
-            solver.add_assertion(pysmt_fml)
-            res = solver.solve()
-            if res:
-                return z3.sat
-            return z3.unsat
-
     def all_smt(self, keys: [z3.ExprRef], bound=5):
         """Sample k models"""
         z3fml = z3.And(self.assertions())
@@ -110,27 +89,6 @@ class PySMTSolver(z3.Solver):
                 solver.add_assertion(Not(And(partial_model)))
                 iteration += 1
                 if iteration >= bound: break
-
-    def binary_interpolant(self, fml_a: z3.BoolRef, fml_b: z3.BoolRef, solver_name="z3", logic=None):
-        """ Binary interpolant"""
-        _, pysmt_fml_a = PySMTSolver.convert(fml_a)
-        _, pysmt_fml_b = PySMTSolver.convert(fml_b)
-
-        itp = binary_interpolant(pysmt_fml_a, pysmt_fml_b, solver_name=solver_name, logic=logic)
-        return Solver(name='z3').converter.convert(itp)
-
-    def sequence_interpolant(self, formulas: [z3.ExprRef]):
-        """Sequence interpolant"""
-        pysmt_formulas = []
-        for fml in formulas:
-            _, pysmt_fml_a = PySMTSolver.convert(fml)
-            pysmt_formulas.append(pysmt_fml_a)
-
-        seq_itp = sequence_interpolant(pysmt_formulas)
-        z3_seq_itp = []
-        for cnt in seq_itp:
-            z3_seq_itp.append(Solver(name='z3').converter.convert(cnt))
-        return z3_seq_itp
 
     def efsmt(self, evars: [z3.ExprRef], uvars: [z3.ExprRef], z3fml: z3.ExprRef, logic=QF_BV, maxloops=None,
               esolver_name="z3", fsolver_name="z3",

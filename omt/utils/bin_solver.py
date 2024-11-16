@@ -44,7 +44,7 @@ def solve_with_bin_smt(logic: str, qfml: z3.ExprRef, solver_name: str):
     s = z3.Solver()
     s.add(qfml)
     fml_str += s.to_smt2()
-    print(fml_str)
+    # print(fml_str)
     tmp_filename = "/tmp/{}_temp.smt2".format(str(uuid.uuid1()))
     tmp = open(tmp_filename, "w")
     try:
@@ -65,7 +65,7 @@ def solve_with_bin_smt(logic: str, qfml: z3.ExprRef, solver_name: str):
         elif solver_name == "q3b":
             cmd = [q3b_exec, tmp_filename]
         else:
-            print("Can not find corresponding solver")
+            print("Can not find the corresponding solver")
             cmd = [z3_exec, tmp_filename]
         print(cmd)
         p_gene = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
