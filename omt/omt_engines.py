@@ -5,7 +5,7 @@ TODO: use utils.z3_plus_smtlib_solver to integrate third-party engine
 import z3
 from enum import Enum
 
-from omt.smttools.z3_plus import Z3SolverPlus
+from omt.utils.z3_plus import Z3SolverPlus
 
 
 class OMTEngineType(Enum):

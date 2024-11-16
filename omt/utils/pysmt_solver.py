@@ -6,8 +6,6 @@ import logging
 import z3
 from pysmt.logics import QF_BV  # AUTO
 from pysmt.oracles import get_logic
-# from pysmt.smtlib.parser import SmtLibParser
-# from pysmt.exceptions import SolverReturnedUnknownResultError
 from pysmt.shortcuts import Bool, get_model, Not, Solver
 from pysmt.shortcuts import EqualsOrIff
 from pysmt.shortcuts import Portfolio

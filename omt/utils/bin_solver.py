@@ -1,17 +1,14 @@
 """
-For calling SMT solvers
+For calling bin solvers
 """
 import os
-import time
 from typing import List
 import subprocess
 from threading import Timer
 import logging
 import uuid
 
-import z3
 
-from omt.smttools.smtlib_solver import SMTLIBSolver
 from omt.config import \
     z3_exec, cvc5_exec, g_bin_solver_timeout, \
     btor_exec, bitwuzla_exec, yices_exec, math_exec, q3b_exec
@@ -21,12 +18,12 @@ logger = logging.getLogger(__name__)
 
 def terminate(process, is_timeout: List):
     """
-        Terminates a process and sets the timeout flag to True.
-        process : subprocess.Popen
-            The process to be terminated.
-        is_timeout : List
-            A list containing a single boolean item. If the process exceeds the timeout limit, the boolean item will be
-            set to True.
+    Terminates a process and sets the timeout flag to True.
+    process : subprocess.Popen
+        The process to be terminated.
+         is_timeout : List
+    A list containing a single boolean item. If the process exceeds the timeout limit, the boolean item will be
+    set to True.
     """
     if process.poll() is None:
         try:
@@ -37,50 +34,14 @@ def terminate(process, is_timeout: List):
             print(ex)
 
 
-def solve_with_bin_smt(logic: str, x: List[z3.ExprRef], y: List[z3.ExprRef], phi: z3.ExprRef, solver_name: str):
+def solve_with_bin_smt(logic: str, qfml: str, solver_name: str):
     """Call bin SMT solvers to solve exists forall
     In this version, we create a temp file, and ...
     """
-    logger.debug("Solving EFSMT(BV) via {}".format(solver_name))
+    logger.debug("Solving QSMT via {}".format(solver_name))
     fml_str = "(set-logic {})\n".format(logic)
-    # there are duplicates in self.exists_vars???
-    dump_strategy = 1
-
-    if dump_strategy == 1:
-        # there are duplicates in self.exists_vars???
-        exits_vars_names = set()
-        for v in x:
-            name = str(v)
-            if name not in exits_vars_names:
-                exits_vars_names.add(name)
-                fml_str += "(declare-const {0} {1})\n".format(v.sexpr(), v.sort().sexpr())
-        # print(exits_vars_names)
-
-        quant_vars = "("
-        for v in y:
-            quant_vars += "({0} {1}) ".format(v.sexpr(), v.sort().sexpr())
-        quant_vars += ")\n"
-
-        quant_fml_body = "(and \n"
-        s = z3.Solver()
-        s.add(phi)
-        # self.phi is in the form of
-        #  and (Init, Trans, Post)
-        assert (z3.is_app(phi))
-        for fml in phi.children():
-            quant_fml_body += "  {}\n".format(fml.sexpr())
-        quant_fml_body += ")"
-
-        fml_body = "(assert (forall {0} {1}))\n".format(quant_vars, quant_fml_body)
-        fml_str += fml_body
-        fml_str += "(check-sat)\n"
-    else:
-        # Another more direct strategy
-        # But we cannot see the definition of the VC clearly
-        sol = z3.Solver()
-        sol.add(z3.ForAll(y, phi))
-        fml_str += sol.to_smt2()
-
+    fml_str += qfml
+    fml_str += "(check-sat)\n"
     tmp_filename = "/tmp/{}_temp.smt2".format(str(uuid.uuid1()))
     tmp = open(tmp_filename, "w")
     try:
@@ -115,8 +76,8 @@ def solve_with_bin_smt(logic: str, x: List[z3.ExprRef], y: List[z3.ExprRef], phi
         if p_gene.poll() is None:
             p_gene.terminate()  # TODO: need this?
 
-        os.remove(tmp_filename)  # rm the tmp file
-
+        # TODO: do we need this? (rm the tmp file)
+        os.remove(tmp_filename)
         if is_timeout_gene[0]:
             return "unknown"
         elif "unsat" in out_gene:
@@ -129,39 +90,6 @@ def solve_with_bin_smt(logic: str, x: List[z3.ExprRef], y: List[z3.ExprRef], phi
         tmp.close()
         if os.path.isfile(tmp_filename):
             os.remove(tmp_filename)
-
-
-def solve_with_bin_smt_v2(logic: str, y, phi: z3.ExprRef, solver_name: str):
-    """Call bin SMT solvers to solve exists forall
-    In thi version, I use the SMLIBSolver (We can send strings to the bin solver)
-    """
-    smt2string = "(set-logic {})\n".format(logic)
-    sol = z3.Solver()
-    sol.add(z3.ForAll(y, phi))
-    smt2string += sol.to_smt2()
-
-    # bin_cmd = ""
-    if solver_name == "z3":
-        bin_cmd = z3_exec
-    elif solver_name == "cvc5":
-        bin_cmd = cvc5_exec + " -q --produce-models"
-    else:
-        bin_cmd = z3_exec
-
-    bin_solver = SMTLIBSolver(bin_cmd)
-    start = time.time()
-    res = bin_solver.check_sat_from_scratch(smt2string)
-    if res == "sat":
-        # print(bin_solver.get_expr_values(["p1", "p0", "p2"]))
-        print("External solver success time: ", time.time() - start)
-        # TODO: get the model to build the invariant
-    elif res == "unsat":
-        print("External solver fails time: ", time.time() - start)
-    else:
-        print("Seems timeout or error in the external solver")
-        print(res)
-    bin_solver.stop()
-    return res
 
 
 def demo_solver():

@@ -8,26 +8,25 @@ that support quantified bit-vector formulas
 """
 
 import z3
+from omt.utils.bin_solver import solve_with_bin_smt
 
 
-def opt_with_qsat(self, exp: z3.ExprRef, minimize: bool):
+def opt_with_qsmt(self, exp: z3.ExprRef, minimize: bool):
+    """ Quantified Satisfaction based OMT
     """
-    Quantified Satisfaction based OMT
-    TODO: currently only works when exp is a variable (need to handle a term)?
-    TODO: change to bv, or extend to bv?
-    """
-    if z3.is_real(exp):
-        exp_misc = z3.Real(str(exp) + "_m")
-    else:
-        exp_misc = z3.Int(str(exp) + "m")
+    exp_misc = z3.BitVec(str(exp) + "m", exp.size())
     s = z3.Solver()
     new_fml = z3.substitute(self.formula, (exp, exp_misc))
+    # TODO: bvule or < (distinguish between unsigned and signed...)
     if minimize:
-        qfml = z3.And(self.formula, z3.ForAll([exp_misc], z3.Implies(new_fml, exp <= exp_misc)))
+        qfml = z3.And(self.formula,
+                      z3.ForAll([exp_misc], z3.Implies(new_fml, z3.ULE(exp, exp_misc))))
     else:
-        # TODO: why not working when x can be +oo????
-        qfml = z3.And(self.formula, z3.ForAll([exp_misc], z3.Implies(new_fml, exp_misc <= exp)))
+        qfml = z3.And(self.formula,
+                      z3.ForAll([exp_misc], z3.Implies(new_fml, z3.ULE(exp_misc, exp))))
     s.add(qfml)
+
+    # FIXME: call different binary solvers that support quantified bit-vectors
     if s.check() == z3.sat:
         tt = s.model().eval(exp)
         return tt
