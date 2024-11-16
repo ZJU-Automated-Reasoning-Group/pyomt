@@ -1,2 +1,2 @@
 # coding: utf-8
-from .maxsat_solver import MaxSATSolver
+from omt.maxsat.maxsat.maxsat_solver import MaxSATSolver
