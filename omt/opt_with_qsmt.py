@@ -11,11 +11,10 @@ import z3
 from omt.utils.bin_solver import solve_with_bin_smt
 
 
-def opt_with_qsmt(self, exp: z3.ExprRef, minimize: bool):
+def opt_with_qsmt(self, exp: z3.ExprRef, minimize: bool, solver_name: str):
     """ Quantified Satisfaction based OMT
     """
     exp_misc = z3.BitVec(str(exp) + "m", exp.size())
-    s = z3.Solver()
     new_fml = z3.substitute(self.formula, (exp, exp_misc))
     # TODO: bvule or < (distinguish between unsigned and signed...)
     if minimize:
@@ -24,12 +23,12 @@ def opt_with_qsmt(self, exp: z3.ExprRef, minimize: bool):
     else:
         qfml = z3.And(self.formula,
                       z3.ForAll([exp_misc], z3.Implies(new_fml, z3.ULE(exp_misc, exp))))
-    s.add(qfml)
 
-    # FIXME: call different binary solvers that support quantified bit-vectors
+    """
+    s = z3.Solver()
+    s.add(qfml)
     if s.check() == z3.sat:
         tt = s.model().eval(exp)
         return tt
-    else:
-        print(s.to_smt2())
-        print("UNSAT")
+    """
+    return solve_with_bin_smt("BV", qfml=qfml, solver_name=solver_name)

@@ -10,8 +10,8 @@ import copy
 from pysat.formula import WCNF
 from pysat.solvers import Solver
 
-from omt.maxsat.maxsat.fm import FM  # is the FM correct???
-from omt.maxsat.maxsat.rc2 import RC2
+from omt.maxsat.fm import FM  # is the FM correct???
+from omt.maxsat.rc2 import RC2
 
 
 class MaxSATSolver:

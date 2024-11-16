@@ -6,8 +6,6 @@ import sys
 from typing import List, Dict, Tuple
 
 import z3
-from z3.z3util import get_vars
-
 
 # p cnf nvar nclauses
 # cr projected_var_ids

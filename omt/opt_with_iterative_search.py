@@ -1,3 +1,6 @@
+"""
+TODO: use PySMT to implement the algorithms
+"""
 import z3
 
 
@@ -17,3 +20,7 @@ def maximize_with_linear_search(self, obj: z3.ExprRef):
         maximum = s.model().eval(obj)
         # print("current: ", maximum)
     return maximum
+
+
+def maximize_with_binary_search(self, obj: z3.ExprRef):
+    raise NotImplementedError
