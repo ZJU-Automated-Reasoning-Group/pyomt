@@ -7,8 +7,6 @@ FIXME:
 """
 import logging
 
-import z3
-
 logger = logging.getLogger(__name__)
 
 
@@ -23,16 +21,10 @@ class OMTSolver:
         self.seed = kwargs.get("seed", 1)  # random seed
         self.solver = kwargs.get("solver", "z3")
 
-        self.initialized = False
-
-    def set_tactic(self, name: str):
-        raise NotImplementedError
-
     def solve(self):
         """
         Solve formulas via different strategies
         """
-        assert self.initialized
         print("OMT solver: {}".format(self.solver))
         # 1. Quantifier instantiation approach
         if self.solver == "z3":
@@ -55,19 +47,3 @@ class OMTSolver:
             raise NotImplementedError
 
         # 3. Simple SMT-based iterative approach
-
-
-def demo_qsmt():
-    import time
-    x, y, z = z3.BitVecs("x y z", 16)
-    # x, y, z = z3.Reals("x y z")
-    fmla = z3.Implies(z3.And(y > 0, y < 10), y - 2 * x < 7)
-
-    start = time.time()
-    solver = OMTSolver()
-    # xx
-    print("time: ", time.time() - start)
-
-
-if __name__ == '__main__':
-    demo_qsmt()

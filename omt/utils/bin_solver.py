@@ -8,6 +8,7 @@ from threading import Timer
 import logging
 import uuid
 
+import z3
 
 from omt.config import \
     z3_exec, cvc5_exec, g_bin_solver_timeout, \
@@ -34,14 +35,16 @@ def terminate(process, is_timeout: List):
             print(ex)
 
 
-def solve_with_bin_smt(logic: str, qfml: str, solver_name: str):
+def solve_with_bin_smt(logic: str, qfml: z3.ExprRef, solver_name: str):
     """Call bin SMT solvers to solve exists forall
     In this version, we create a temp file, and ...
     """
     logger.debug("Solving QSMT via {}".format(solver_name))
     fml_str = "(set-logic {})\n".format(logic)
-    fml_str += qfml
-    fml_str += "(check-sat)\n"
+    s = z3.Solver()
+    s.add(qfml)
+    fml_str += s.to_smt2()
+    print(fml_str)
     tmp_filename = "/tmp/{}_temp.smt2".format(str(uuid.uuid1()))
     tmp = open(tmp_filename, "w")
     try:
@@ -64,7 +67,7 @@ def solve_with_bin_smt(logic: str, qfml: str, solver_name: str):
         else:
             print("Can not find corresponding solver")
             cmd = [z3_exec, tmp_filename]
-        # print(cmd)
+        print(cmd)
         p_gene = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         is_timeout_gene = [False]
         timer_gene = Timer(g_bin_solver_timeout, terminate, args=[p_gene, is_timeout_gene])
@@ -73,11 +76,10 @@ def solve_with_bin_smt(logic: str, qfml: str, solver_name: str):
         out_gene = ' '.join([str(element.decode('UTF-8')) for element in out_gene])
         p_gene.stdout.close()  # close?
         timer_gene.cancel()
+
         if p_gene.poll() is None:
             p_gene.terminate()  # TODO: need this?
 
-        # TODO: do we need this? (rm the tmp file)
-        os.remove(tmp_filename)
         if is_timeout_gene[0]:
             return "unknown"
         elif "unsat" in out_gene:
@@ -88,8 +90,9 @@ def solve_with_bin_smt(logic: str, qfml: str, solver_name: str):
             return "unknown"
     finally:
         tmp.close()
-        if os.path.isfile(tmp_filename):
-            os.remove(tmp_filename)
+
+    if os.path.isfile(tmp_filename):
+        os.remove(tmp_filename)
 
 
 def demo_solver():
