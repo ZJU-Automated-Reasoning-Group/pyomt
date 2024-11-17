@@ -11,6 +11,8 @@ import z3
 from pysmt.logics import QF_BV  # AUTO
 from pysmt.typing import INT, REAL, BVType
 
+from omt.config import g_enable_debug
+
 # BV1, BV8, BV16, BV32, BV64, BV128
 
 logger = logging.getLogger(__name__)
@@ -84,7 +86,7 @@ def optimize_with_binary_search(z3_fml, z3_obj, minimize: bool, solver_name: str
             solver.push()
 
             cur_mid = cur_min + ((cur_max - cur_min) >> 1)
-            if True:
+            if g_enable_debug:
                 print(f"min, mid, max: {cur_min}, {cur_mid}, {cur_max}")
                 print(f"current upper: {upper}")
 
@@ -92,7 +94,8 @@ def optimize_with_binary_search(z3_fml, z3_obj, minimize: bool, solver_name: str
             cur_mid_expr = BV(cur_mid, sz)
             cur_max_expr = BV(cur_max, sz)
 
-            cond = And(BVUGE(obj, cur_mid_expr), BVULE(obj, cur_max_expr))
+            cond = And(BVUGE(obj, cur_mid_expr),
+                       BVULE(obj, cur_max_expr))
             solver.add_assertion(cond)
 
             if not solver.solve():
@@ -115,11 +118,14 @@ def optimize_with_binary_search(z3_fml, z3_obj, minimize: bool, solver_name: str
         while cur_min <= cur_max:
             solver.push()
             cur_mid = cur_min + ((cur_max - cur_min) >> 1)
-            if True:
+            if g_enable_debug:
                 print(f"Min search - min, mid, max: {cur_min}, {cur_mid}, {cur_max}")
 
+            cur_min_expr = BV(cur_min, sz)
             cur_mid_expr = BV(cur_mid, sz)
-            cond = And(BVUGE(fml, cur_min), BVULE(obj, cur_mid_expr))
+            # cur_max_expr = BV(cur_max, sz)
+            cond = And(BVUGE(obj, cur_min_expr),
+                       BVULE(obj, cur_mid_expr))
             solver.add_assertion(cond)
 
             if not solver.solve():
@@ -140,9 +146,10 @@ def demo_iterative():
     x, y, z = z3.BitVecs("x y z", 16)
     fml = z3.And(z3.UGT(y, 3), z3.ULT(y, 10))
     print("start solving")
-    # res = optimize_with_linear_search(fml, y, minimize=True, solver_name="z3")
-    res = optimize_with_binary_search(fml, y, minimize=True, solver_name="z3")
-    print(res)
+    lin_res = optimize_with_linear_search(fml, y, minimize=True, solver_name="z3")
+    print(lin_res)
+    bin_res = optimize_with_binary_search(fml, y, minimize=True, solver_name="z3")
+    print(bin_res)
     start = time.time()
     print("solving time: ", time.time() - start)
 

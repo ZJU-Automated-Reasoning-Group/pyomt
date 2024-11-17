@@ -10,9 +10,7 @@ math_exec = project_root_dir + "/bin_solvers/bin/mathsat"
 
 q3b_exec = project_root_dir + "/bin_solvers/bin/q3b"
 
-print(q3b_exec)
 g_bin_solver_timeout = 30
+g_enable_debug = True
 
 g_omt_args = None
-
-

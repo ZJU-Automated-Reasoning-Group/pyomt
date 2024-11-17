@@ -2,42 +2,76 @@
 For calling bin solvers
 """
 import os
-from typing import List
 import subprocess
-from threading import Timer
 import logging
 import uuid
+from typing import List
+from threading import Timer
 
 import z3
 
-from omt.config import \
-    z3_exec, cvc5_exec, g_bin_solver_timeout, \
+from omt.config import (
+    z3_exec, cvc5_exec, g_bin_solver_timeout,
     btor_exec, bitwuzla_exec, yices_exec, math_exec, q3b_exec
+)
 
 logger = logging.getLogger(__name__)
 
 
 def terminate(process, is_timeout: List):
     """
-    Terminates a process and sets the timeout flag to True.
-    process : subprocess.Popen
-        The process to be terminated.
-         is_timeout : List
-    A list containing a single boolean item. If the process exceeds the timeout limit, the boolean item will be
-    set to True.
+    Terminate a process and set the timeout flag.
+    Args:
+        process (subprocess.Popen): The process to be terminated.
+        is_timeout (List[bool]): A list containing a single boolean item.
+                                 It will be set to True if the process
+                                 exceeds the timeout limit.
     """
     if process.poll() is None:
         try:
             process.terminate()
             is_timeout[0] = True
+            logger.debug("Process terminated due to timeout.")
         except Exception as ex:
             print("error for interrupting")
-            print(ex)
+            logger.error("Error interrupting process: %s", ex)
+
+
+def get_solver_command(solver_name: str, tmp_filename: str) -> List[str]:
+    """
+    Get the command to run the specified solver.
+
+    Args:
+        solver_name (str): The name of the solver.
+        tmp_filename (str): The temporary file name containing the SMT problem.
+
+    Returns:
+        List[str]: The command to execute the solver.
+    """
+    solvers = {
+        "z3": [z3_exec, tmp_filename],
+        "cvc5": [cvc5_exec, "-q", "--produce-models", tmp_filename],
+        "btor": [btor_exec, tmp_filename],
+        "boolector": [btor_exec, tmp_filename],
+        "yices2": [yices_exec, tmp_filename],
+        "mathsat": [math_exec, tmp_filename],
+        "bitwuzla": [bitwuzla_exec, tmp_filename],
+        "q3b": [q3b_exec, tmp_filename],
+    }
+    return solvers.get(solver_name, [z3_exec, tmp_filename])
 
 
 def solve_with_bin_smt(logic: str, qfml: z3.ExprRef, solver_name: str):
-    """Call bin SMT solvers to solve exists forall
-    In this version, we create a temp file, and ...
+    """
+    Call binary SMT solvers to solve quantified SMT problems.
+
+    Args:
+        logic (str): The logic to be used.
+        qfml (z3.ExprRef): The formula to be solved.
+        solver_name (str): The name of the solver to use.
+
+    Returns:
+        str: The result of the solver ('sat', 'unsat', or 'unknown').
     """
     logger.debug("Solving QSMT via {}".format(solver_name))
     fml_str = "(set-logic {})\n".format(logic)
@@ -46,28 +80,13 @@ def solve_with_bin_smt(logic: str, qfml: z3.ExprRef, solver_name: str):
     fml_str += s.to_smt2()
     # print(fml_str)
     tmp_filename = "/tmp/{}_temp.smt2".format(str(uuid.uuid1()))
-    tmp = open(tmp_filename, "w")
     try:
+        tmp = open(tmp_filename, "w")
         tmp.write(fml_str)
         tmp.close()
-        if solver_name == "z3":
-            cmd = [z3_exec, tmp_filename]
-        elif solver_name == "cvc5":
-            cmd = [cvc5_exec, "-q", "--produce-models", tmp_filename]
-        elif solver_name == "btor" or solver_name == "boolector":
-            cmd = [btor_exec, tmp_filename]
-        elif solver_name == "yices2":
-            cmd = [yices_exec, tmp_filename]
-        elif solver_name == "mathsat":
-            cmd = [math_exec, tmp_filename]
-        elif solver_name == "bitwuzla":
-            cmd = [bitwuzla_exec, tmp_filename]
-        elif solver_name == "q3b":
-            cmd = [q3b_exec, tmp_filename]
-        else:
-            print("Can not find the corresponding solver")
-            cmd = [z3_exec, tmp_filename]
-        print(cmd)
+        cmd = get_solver_command(solver_name, tmp_filename)
+        # print(cmd)
+        logger.debug("Command: %s", cmd)
         p_gene = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         is_timeout_gene = [False]
         timer_gene = Timer(g_bin_solver_timeout, terminate, args=[p_gene, is_timeout_gene])
@@ -90,9 +109,8 @@ def solve_with_bin_smt(logic: str, qfml: z3.ExprRef, solver_name: str):
             return "unknown"
     finally:
         tmp.close()
-
-    if os.path.isfile(tmp_filename):
-        os.remove(tmp_filename)
+        if os.path.isfile(tmp_filename):
+            os.remove(tmp_filename)
 
 
 def demo_solver():

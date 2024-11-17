@@ -90,5 +90,4 @@ class MaxSATSolver:
             print(ex)
         # print("final assumptions: ", assumption_lits)
         return assumption_lits
-
         # return obv_bs(self.hard, len(self.soft))  # FIXME: @wwq, it seems that this function has bugs
