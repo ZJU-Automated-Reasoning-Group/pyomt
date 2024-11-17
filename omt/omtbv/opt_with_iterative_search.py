@@ -1,8 +1,7 @@
 """
-TODO: use PySMT to implement the algorithms
-  Can we use PySMT to parse the OMT instance directly?
-  The current implementation involves converting z3 expr to pysmt, which is
-  strange and can be slow...
+TODO. pysmt cannot handle bit-vector operations in a few formulas generaed by z3.
+ E.g., it may haave a more strict restriction on
+  the number of arguments to certain bit-vector options
 """
 from pysmt.shortcuts import BV, BVULT, BVUGT, Solver, Symbol
 from pysmt.shortcuts import Symbol, And, Not, Or, Ite, BV, BVUGE, BVULE, Solver, is_sat
