@@ -3,6 +3,8 @@
 This module provides a MaxSATSolver class that wraps different MaxSAT engines and implements
 methods for solving weighted and unweighted MaxSAT problems. It also includes an implementation
 of Nadel's algorithm for OMT(BV) "Bit-Vector Optimization (TACAS'16)".
+
+TODO: add interfaces for calling binary solvers?
 """
 
 import copy

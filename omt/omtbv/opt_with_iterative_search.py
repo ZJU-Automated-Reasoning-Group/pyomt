@@ -5,6 +5,7 @@ TODO: use PySMT to implement the algorithms
   strange and can be slow...
 """
 from pysmt.shortcuts import BV, BVULT, BVUGT, Solver, Symbol
+from pysmt.shortcuts import Symbol, And, Not, Or, Ite, BV, BVUGE, BVULE, Solver, is_sat
 import logging
 import z3
 from pysmt.logics import QF_BV  # AUTO
@@ -28,14 +29,14 @@ def convert_to_pysmt(zf: z3.ExprRef, obj: z3.ExprRef):
 
 
 def optimize_with_linear_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
-                                minimize: bool, solver:str):
+                                minimize: bool, solver_name: str):
     """Linear Search based OMT using PySMT with bit-vectors."""
 
     obj, fml = convert_to_pysmt(z3_fml, z3_obj)
     print(obj)
     print(fml)
 
-    with Solver(name=solver) as solver:
+    with Solver(name=solver_name) as solver:
         solver.add_assertion(fml)
 
         if minimize:
@@ -62,59 +63,85 @@ def optimize_with_linear_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
             return str(cur_upper) if cur_upper is not None else "error"
 
 
-def optimize_with_binary_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
-                                minimize: bool, solver:str):
+def optimize_with_binary_search(z3_fml, z3_obj, minimize: bool, solver_name: str):
     """Binary Search based OMT using PySMT with bit-vectors."""
-    # FIXME: generate by LLM.. (there are bugs..)
-
+    # Convert Z3 expressions to PySMT
     obj, fml = convert_to_pysmt(z3_fml, z3_obj)
     print(obj)
     print(fml)
 
-    with Solver(name=solver) as solver:
+    sz = obj.bv_width()
+    max_bv = (1 << sz) - 1
+
+    if not minimize:
+        solver = Solver(name=solver_name)
         solver.add_assertion(fml)
 
-        if solver.solve():
-            low = BV(0, obj.bv_width())
-            high = None
+        cur_min, cur_max = 0, max_bv
+        upper = BV(0, sz)
 
-            model = solver.get_model()
-            if minimize:
-                high = model.get_value(obj)
-                while BVULT(low, high):
-                    mid = low.BVAdd(high).BVLShiftRight(BV(1, obj.bv_width()))
-                    solver.push()
-                    solver.add_assertion(BVULT(obj, mid))
-                    if solver.solve():
-                        high = solver.get_model().get_value(obj)
-                    else:
-                        solver.pop()
-                        low = mid.BVAdd(BV(1, obj.bv_width()))
+        while cur_min <= cur_max:
+            solver.push()
+
+            cur_mid = cur_min + ((cur_max - cur_min) >> 1)
+            if True:
+                print(f"min, mid, max: {cur_min}, {cur_mid}, {cur_max}")
+                print(f"current upper: {upper}")
+
+            # cur_min_expr = BV(cur_min, sz)
+            cur_mid_expr = BV(cur_mid, sz)
+            cur_max_expr = BV(cur_max, sz)
+
+            cond = And(BVUGE(obj, cur_mid_expr), BVULE(obj, cur_max_expr))
+            solver.add_assertion(cond)
+
+            if not solver.solve():
+                cur_max = cur_mid - 1
+                solver.pop()
             else:
-                low = model.get_value(obj)
-                high = BV(2 ** obj.bv_width() - 1, obj.bv_width())
-                while BVULT(low, high):
-                    mid = low.BVAdd(high).BVLShiftRight(BV(1, obj.bv_width()))
-                    solver.push()
-                    solver.add_assertion(BVUGT(obj, mid))
-                    if solver.solve():
-                        low = solver.get_model().get_value(obj)
-                    else:
-                        solver.pop()
-                        high = mid.BVSub(BV(1, obj.bv_width()))
+                model = solver.get_model()
+                upper = model.get_value(obj)
+                cur_min = int(upper.constant_value()) + 1
+                solver.pop()
 
-            return str(high if minimize else low)
-        else:
-            return "error"
+        return upper
+    else:
+        # Compute minimum
+        solver = Solver(name=solver_name)
+        solver.add_assertion(fml)
+        cur_min, cur_max = 0, max_bv
+        lower = BV(max_bv, sz)
+
+        while cur_min <= cur_max:
+            solver.push()
+            cur_mid = cur_min + ((cur_max - cur_min) >> 1)
+            if True:
+                print(f"Min search - min, mid, max: {cur_min}, {cur_mid}, {cur_max}")
+
+            cur_mid_expr = BV(cur_mid, sz)
+            cond = And(BVUGE(fml, cur_min), BVULE(obj, cur_mid_expr))
+            solver.add_assertion(cond)
+
+            if not solver.solve():
+                cur_min = cur_mid + 1
+                solver.pop()
+            else:
+                model = solver.get_model()
+                lower = model.get_value(obj)
+                cur_max = int(lower.constant_value()) - 1
+                solver.pop()
+
+        min_value = lower
+        return min_value
 
 
 def demo_iterative():
     import time
     x, y, z = z3.BitVecs("x y z", 16)
-    fml = z3.And(z3.UGT(y, 0), z3.ULT(y, 10))
+    fml = z3.And(z3.UGT(y, 3), z3.ULT(y, 10))
     print("start solving")
-    res = optimize_with_linear_search(fml, y, minimize=True, solver="z3")
-    # res = optimize_with_binary_search(fml, y, minimize=True, solver="z3")
+    # res = optimize_with_linear_search(fml, y, minimize=True, solver_name="z3")
+    res = optimize_with_binary_search(fml, y, minimize=True, solver_name="z3")
     print(res)
     start = time.time()
     print("solving time: ", time.time() - start)
@@ -122,4 +149,3 @@ def demo_iterative():
 
 if __name__ == '__main__':
     demo_iterative()
-
