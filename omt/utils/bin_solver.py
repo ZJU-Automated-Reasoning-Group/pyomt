@@ -74,10 +74,12 @@ def solve_with_bin_smt(logic: str, qfml: z3.ExprRef, solver_name: str):
         str: The result of the solver ('sat', 'unsat', or 'unknown').
     """
     logger.debug("Solving QSMT via {}".format(solver_name))
-    fml_str = "(set-logic {})\n".format(logic)
+    fml_str = "(set-option :produce-models true)\n"
+    fml_str += "(set-logic {})\n".format(logic)
     s = z3.Solver()
     s.add(qfml)
     fml_str += s.to_smt2()
+    fml_str += "(get-model)\n"
     # print(fml_str)
     tmp_filename = "/tmp/{}_temp.smt2".format(str(uuid.uuid1()))
     try:
@@ -99,12 +101,15 @@ def solve_with_bin_smt(logic: str, qfml: z3.ExprRef, solver_name: str):
         if p_gene.poll() is None:
             p_gene.terminate()  # TODO: need this?
 
+        # FIXME: parse the model returned by the SMT solver?
         if is_timeout_gene[0]:
             return "unknown"
         elif "unsat" in out_gene:
-            return "unsat"
+            return out_gene
+            # return "unsat"
         elif "sat" in out_gene:
-            return "sat"
+            return out_gene
+            # return "sat"
         else:
             return "unknown"
     finally:
@@ -114,7 +119,7 @@ def solve_with_bin_smt(logic: str, qfml: z3.ExprRef, solver_name: str):
 
 
 def demo_solver():
-    cmd = [cvc5_exec, "-q", "--produce-models", 'tmp.smt2']
+    cmd = [z3_exec, 'tmp.smt2']
     p_gene = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     is_timeout_gene = [False]
     timer_gene = Timer(g_bin_solver_timeout, terminate, args=[p_gene, is_timeout_gene])

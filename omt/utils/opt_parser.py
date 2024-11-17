@@ -6,6 +6,7 @@ from z3.z3consts import *
 from omt.omtbv.opt_with_iterative_search import optimize_with_linear_search, \
     optimize_with_binary_search
 from omt.omtbv.omt_with_maxsat import optimize_with_maxsat
+from omt.omtbv.opt_with_qsmt import opt_with_qsmt
 
 
 class OMTParser:
@@ -80,17 +81,30 @@ def demo_omt_parser():
     fml = z3.And(s.assertions)
     obj = s.objectives[0]
     print(fml, obj)
-    # use Z3
+    # 1. use z3 OPT
     z3_res = optimize_as_long(fml, obj)
     print("z3 res: ", z3_res)
+    print("----------------------------------")
 
-    # use our implementation
+    # 2. use SMT-based linear search
     lin_res = optimize_with_linear_search(fml, obj, minimize=False, solver_name="z3")
     print("lin res: ", lin_res)
+    print("----------------------------------")
 
-    # use MaxSAT
+    # 2. use SMT-based binary search
+    bin_res = optimize_with_binary_search(fml, obj, minimize=False, solver_name="z3")
+    print("bin res: ", bin_res)
+    print("----------------------------------")
+
+    # 3. use MaxSAT
     maxsat_res = optimize_with_maxsat(fml, obj, minimize=False, solver_name="z3")
     print("maxsat res: ", maxsat_res)
+    print("----------------------------------")
+
+    # 4. use QSMT
+    qsmt_res = opt_with_qsmt(fml, obj, minimize=False, solver_name="z3")
+    print("qsmt res: ", qsmt_res)
+    print("----------------------------------")
 
 
 if __name__ == "__main__":
