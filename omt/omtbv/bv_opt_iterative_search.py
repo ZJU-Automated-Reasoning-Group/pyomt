@@ -8,7 +8,7 @@ from pysmt.shortcuts import Symbol, And, Not, Or, Ite, BV, BVUGE, BVULE, Solver,
 import logging
 import z3
 from pysmt.logics import QF_BV  # AUTO
-from pysmt.typing import INT, REAL, BVType
+from pysmt.typing import INT, REAL, BVType, BOOL
 
 from omt.config import g_enable_debug
 
@@ -28,6 +28,8 @@ def to_pysmt_vars(z3vars: [z3.ExprRef]):
             res.append(Symbol(v.decl().name(), REAL))
         elif z3.is_bv(v):
             res.append(Symbol(v.decl().name(), BVType(v.sort().size())))
+        elif z3.is_bool(v):
+            res.append(Symbol(v.decl().name(), BOOL))
         else:
             raise NotImplementedError
     return res
@@ -48,9 +50,11 @@ def convert_to_pysmt(zf: z3.ExprRef, obj: z3.ExprRef):
     # return pysmt_vars, pysmt_fml
 
 
-def optimize_with_linear_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
-                                minimize: bool, solver_name: str):
-    """Linear Search based OMT using PySMT with bit-vectors."""
+def bv_opt_with_linear_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
+                              minimize: bool, solver_name: str):
+    """Linear Search based OMT using PySMT with bit-vectors.
+    solver_name: the backend SMT solver for pySMT
+    """
 
     obj, fml = convert_to_pysmt(z3_fml, z3_obj)
     print(obj)
@@ -83,7 +87,7 @@ def optimize_with_linear_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
             return str(cur_upper) if cur_upper is not None else "error"
 
 
-def optimize_with_binary_search(z3_fml, z3_obj, minimize: bool, solver_name: str):
+def bv_opt_with_binary_search(z3_fml, z3_obj, minimize: bool, solver_name: str):
     """Binary Search based OMT using PySMT with bit-vectors."""
     # Convert Z3 expressions to PySMT
     obj, fml = convert_to_pysmt(z3_fml, z3_obj)
@@ -164,9 +168,9 @@ def demo_iterative():
     x, y, z = z3.BitVecs("x y z", 16)
     fml = z3.And(z3.UGT(y, 3), z3.ULT(y, 10))
     print("start solving")
-    lin_res = optimize_with_linear_search(fml, y, minimize=False, solver_name="z3")
+    lin_res = bv_opt_with_linear_search(fml, y, minimize=False, solver_name="z3")
     print(lin_res)
-    bin_res = optimize_with_binary_search(fml, y, minimize=True, solver_name="z3")
+    bin_res = bv_opt_with_binary_search(fml, y, minimize=True, solver_name="z3")
     print(bin_res)
     start = time.time()
     print("solving time: ", time.time() - start)

@@ -12,12 +12,6 @@ pysmt-install --cvc4 --confirm-agreement
 # install boolector, it takes a long time, comment it if necessary
 pysmt-install --btor --confirm-agreement
 
-# install picosat
-pysmt-install --picosat --confirm-agreement
-
-# install bdd
-pysmt-install --bdd --confirm-agreement
-
 # Download and build Boolector
 git clone https://github.com/boolector/boolector
 cd boolector

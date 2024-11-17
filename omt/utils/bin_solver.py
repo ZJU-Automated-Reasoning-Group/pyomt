@@ -37,10 +37,9 @@ def terminate(process, is_timeout: List):
             logger.error("Error interrupting process: %s", ex)
 
 
-def get_solver_command(solver_name: str, tmp_filename: str) -> List[str]:
+def get_smt_solver_command(solver_name: str, tmp_filename: str) -> List[str]:
     """
     Get the command to run the specified solver.
-
     Args:
         solver_name (str): The name of the solver.
         tmp_filename (str): The temporary file name containing the SMT problem.
@@ -61,13 +60,30 @@ def get_solver_command(solver_name: str, tmp_filename: str) -> List[str]:
     return solvers.get(solver_name, [z3_exec, tmp_filename])
 
 
-def solve_with_bin_smt(logic: str, qfml: z3.ExprRef, solver_name: str):
+def get_maxsat_solver_command(solver_name: str, tmp_filename: str) -> List[str]:
+    """
+    Get the command to run the specified solver.
+    Args:
+        solver_name (str): The name of the solver.
+        tmp_filename (str): The temporary file name containing the SMT problem.
+
+    Returns:
+        List[str]: The command to execute the solver.
+    """
+    solvers = {
+        "z3": [z3_exec, tmp_filename],
+    }
+    return solvers.get(solver_name, [z3_exec, tmp_filename])
+
+
+def solve_with_bin_smt(logic: str, qfml: z3.ExprRef, obj_name: str, solver_name: str):
     """
     Call binary SMT solvers to solve quantified SMT problems.
 
     Args:
         logic (str): The logic to be used.
         qfml (z3.ExprRef): The formula to be solved.
+        obj_name: The name of the objective
         solver_name (str): The name of the solver to use.
 
     Returns:
@@ -79,14 +95,14 @@ def solve_with_bin_smt(logic: str, qfml: z3.ExprRef, solver_name: str):
     s = z3.Solver()
     s.add(qfml)
     fml_str += s.to_smt2()
-    fml_str += "(get-model)\n"
+    fml_str += "(get-value ({}))\n".format(obj_name)
     # print(fml_str)
     tmp_filename = "/tmp/{}_temp.smt2".format(str(uuid.uuid1()))
     try:
         tmp = open(tmp_filename, "w")
         tmp.write(fml_str)
         tmp.close()
-        cmd = get_solver_command(solver_name, tmp_filename)
+        cmd = get_smt_solver_command(solver_name, tmp_filename)
         # print(cmd)
         logger.debug("Command: %s", cmd)
         p_gene = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -113,7 +129,47 @@ def solve_with_bin_smt(logic: str, qfml: z3.ExprRef, solver_name: str):
         else:
             return "unknown"
     finally:
+        # tmp.close()
+        if os.path.isfile(tmp_filename):
+            os.remove(tmp_filename)
+
+
+def solve_with_bin_maxsat(wcnf: str, solver_name: str):
+    """
+    Solve weighted MaxSAT via binary solvers (Maybe we can use pipe to send the
+      instance to the solvers..?)
+    """
+    logger.debug("Solving QSMT via {}".format(solver_name))
+    fml_str = ""
+    tmp_filename = "/tmp/{}_temp.wcnf".format(str(uuid.uuid1()))
+    try:
+        tmp = open(tmp_filename, "w")
+        tmp.write(fml_str)
         tmp.close()
+        cmd = get_maxsat_solver_command(solver_name, tmp_filename)
+        logger.debug("Command: %s", cmd)
+        p_gene = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        is_timeout_gene = [False]
+        timer_gene = Timer(g_bin_solver_timeout, terminate, args=[p_gene, is_timeout_gene])
+        timer_gene.start()
+        out_gene = p_gene.stdout.readlines()
+        out_gene = ' '.join([str(element.decode('UTF-8')) for element in out_gene])
+        p_gene.stdout.close()  # close?
+        timer_gene.cancel()
+
+        if p_gene.poll() is None:
+            p_gene.terminate()  # TODO: need this?
+
+        # FIXME: parse the model returned by the SMT solver?
+        if is_timeout_gene[0]:
+            return "unknown"
+        elif "xxxxx" in out_gene:
+            return out_gene
+        elif "xxxxx" in out_gene:
+            return out_gene
+        else:
+            return "unknown"
+    finally:
         if os.path.isfile(tmp_filename):
             os.remove(tmp_filename)
 

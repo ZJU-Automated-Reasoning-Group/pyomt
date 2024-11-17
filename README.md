@@ -20,4 +20,8 @@
 ## TBD
 - Differential testing?
 
+~~~~
+pysmt.exceptions.ConvertExpressionError: Unsupported expression: bvxnor(bv_41-0, bv_41-0)
+
+~~~~
 ## References
