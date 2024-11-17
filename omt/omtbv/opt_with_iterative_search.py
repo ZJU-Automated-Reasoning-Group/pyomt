@@ -20,9 +20,28 @@ logger = logging.getLogger(__name__)
 
 # NOTE: both pysmt and z3 have a class "Solver"
 
+def to_pysmt_vars(z3vars: [z3.ExprRef]):
+    res = []
+    for v in z3vars:
+        if z3.is_int(v):
+            res.append(Symbol(v.decl().name(), INT))
+        elif z3.is_real(v):
+            res.append(Symbol(v.decl().name(), REAL))
+        elif z3.is_bv(v):
+            res.append(Symbol(v.decl().name(), BVType(v.sort().size())))
+        else:
+            raise NotImplementedError
+    return res
+
+
 def convert_to_pysmt(zf: z3.ExprRef, obj: z3.ExprRef):
-    # zvs = z3.z3util.get_vars(zf)
-    # pysmt_vars = to_pysmt_vars(zvs)
+    # FIXME: we use  the following two lines to hide warnings from PYSMT(?)
+    #  However, they seem not to be necessary and z3.z3util.get_vars can be very slow
+    #  (Is the warning caused py pySMT?)
+    zvs = z3.z3util.get_vars(zf)  # this can be very slow...
+    _ = to_pysmt_vars(zvs)
+
+    #
     z3s = Solver(name='z3')
     pysmt_var = Symbol(obj.decl().name(), BVType(obj.sort().size()))
     pysmt_fml = z3s.converter.back(zf)
@@ -146,7 +165,7 @@ def demo_iterative():
     x, y, z = z3.BitVecs("x y z", 16)
     fml = z3.And(z3.UGT(y, 3), z3.ULT(y, 10))
     print("start solving")
-    lin_res = optimize_with_linear_search(fml, y, minimize=True, solver_name="z3")
+    lin_res = optimize_with_linear_search(fml, y, minimize=False, solver_name="z3")
     print(lin_res)
     bin_res = optimize_with_binary_search(fml, y, minimize=True, solver_name="z3")
     print(bin_res)

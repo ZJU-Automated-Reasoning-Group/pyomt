@@ -7,7 +7,8 @@ a, b, c   0/1 false/true
 (a or b) and (not a and c)..... SAT
 
 TODO:
-  - Need to track the relations between bit-vector variables, boolean variables, and the numbers in pysat CNF
+  - Need to track the relations between bit-vector variables, boolean variables,
+   and the numbers in pysat CNF
   - Integrated with a uniform interface?
 """
 import logging
@@ -44,6 +45,7 @@ class BitBlastOMTBVSolver:
     def from_smt_formula(self, formula: z3.BoolRef):
         self.fml = formula
         self.vars = get_vars(self.fml)
+
     def bit_blast(self):
         """
         The bit_blast function converts a bit-vector formula to Boolean logic.
@@ -169,3 +171,4 @@ class BitBlastOMTBVSolver:
         logger.debug("TACAS16 MaxSAT time: {}".format(time.time() - start))
 
         return sum_score
+

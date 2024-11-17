@@ -3,6 +3,10 @@
 import z3
 from z3.z3consts import *
 
+from omt.omtbv.opt_with_iterative_search import optimize_with_linear_search, \
+    optimize_with_binary_search
+from omt.omtbv.omt_with_maxsat import optimize_with_maxsat
+
 
 class OMTParser:
     """Currently, we focus on two modes
@@ -62,36 +66,31 @@ class OMTParser:
 
 def demo_omt_parser():
     from omt.omtbv.omt_with_maxsat import BitBlastOMTBVSolver
-    from omt.utils.z3opt_utils import box_optimize_as_long, optimize_as_long
-    fml_one = """
-    (declare-const x (_ BitVec 16)) \n (declare-const y (_ BitVec 16)) \n
-    (assert (bvult x (_ bv100 16))) \n (assert (bvule y (_ bv98 16))) \n
-    (maximize (bvsub x y)) \n (minimize (bvadd x y)) \n (minimize (bvneg y)) \n (check-sat)
-    """
+    from omt.utils.z3opt_utils import optimize_as_long
     fml_two = """
     (declare-const x (_ BitVec 4)) \n (declare-const y (_ BitVec 4)) \n
     (assert (bvult x (_ bv5 4))) \n (assert (bvuge y (_ bv3 4))) \n
-    (maximize x) \n (minimize x) \n (maximize y) \n (minimize y) \n (check-sat)
+    (maximize x) \n (check-sat)
     """
-    if True:
-        x, y = z3.BitVecs("x y", 4)
-        fml = z3.And(z3.ULT(x, 5), z3.UGE(y, 3))
-        print(optimize_as_long(fml=fml, obj=-x, minimize=False))  # 15?
-        # print(optimize_as_long(fml=fml, obj=x, minimize=True))
-        # print(optimize_as_long(fml=fml, obj=y, minimize=False))
-        # print(optimize_as_long(fml=fml, obj=y, minimize=True))
-        # print(box_optimize_as_long(fml, minimize=[], maximize=[x, -x, y, -y]))
-    else:
-        s = OMTParser()
-        s.parse_with_z3(fml_two)
-        print(s.objectives)
-        # use Z3
-        print(box_optimize_as_long(z3.And(s.assertions), minimize=[], maximize=s.objectives)[1])
-        # use our implementation
-        opt = BitBlastOMTBVSolver()
-        opt.from_smt_formula(z3.And(s.assertions))
-        res = opt.boxed_optimize(goals=s.objectives, is_signed=False)
-        print(res)
+
+    # print(optimize_as_long(fml=fml, obj=-x, minimize=False))  # 15?
+    s = OMTParser()
+    s.parse_with_z3(fml_two)
+    # print(s.objectives)
+    fml = z3.And(s.assertions)
+    obj = s.objectives[0]
+    print(fml, obj)
+    # use Z3
+    z3_res = optimize_as_long(fml, obj)
+    print("z3 res: ", z3_res)
+
+    # use our implementation
+    lin_res = optimize_with_linear_search(fml, obj, minimize=False, solver_name="z3")
+    print("lin res: ", lin_res)
+
+    # use MaxSAT
+    maxsat_res = optimize_with_maxsat(fml, obj, minimize=False, solver_name="z3")
+    print("maxsat res: ", maxsat_res)
 
 
 if __name__ == "__main__":

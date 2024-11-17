@@ -18,18 +18,25 @@ def optimize_with_maxsat(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
                                 minimize: bool, solver_name: str):
     omt = BitBlastOMTBVSolver()
     omt.from_smt_formula(z3_fml)
+    sz = z3_obj.size()
+    max_bv = (1 << sz) - 1
     if minimize:
-        return omt.minimize_with_maxsat(z3_obj, is_signed=False)
+        # TODO: add the API minimize_with_maxsat?
+        # return omt.minimize_with_maxsat(z3_obj, is_signed=False)
+        # is the following right?
+        tmp = omt.maximize_with_maxsat(-z3_obj, is_signed=False)
+        print(tmp)
+        return max_bv - tmp
     else:
         return omt.maximize_with_maxsat(z3_obj, is_signed=False)
 
 
 def demo_maxsat():
     import time
-    x, y, z = z3.BitVecs("x y z", 16)
+    x, y, z = z3.BitVecs("x y z", 4)
     fml = z3.And(z3.UGT(y, 3), z3.ULT(y, 10))
     print("start solving")
-    res = optimize_with_maxsat(fml, y, minimize=False, solver_name="z3")
+    res = optimize_with_maxsat(fml, y, minimize=True, solver_name="z3")
     print(res)
     start = time.time()
     print("solving time: ", time.time() - start)
