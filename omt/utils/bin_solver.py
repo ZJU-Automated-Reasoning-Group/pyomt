@@ -52,7 +52,6 @@ def get_smt_solver_command(solver_name: str, tmp_filename: str) -> List[str]:
         "cvc5": [cvc5_exec, "-q", "--produce-models", tmp_filename],
         "btor": [btor_exec, tmp_filename],
         "boolector": [btor_exec, tmp_filename],
-        "yices2": [yices_exec, tmp_filename],
         "mathsat": [math_exec, tmp_filename],
         "bitwuzla": [bitwuzla_exec, tmp_filename],
         "q3b": [q3b_exec, tmp_filename],

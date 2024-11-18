@@ -4,6 +4,5 @@ psutil~=5.9.0
 Cython~=0.29.34
 python-sat==0.1.8.dev1
 tqdm~=4.65.0
-python-sat==0.1.8.dev1
 # seaborn~=0.12.2
 # scikit-learn==1.2.2

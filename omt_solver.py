@@ -13,11 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 def solve_opt_file(filename: str, solver_name: str):
+    """Interface for solving single-objective
+    Currently, the OMTParser will convert all objectives to the "maximal objecives"
+    """
     s = OMTParser()
     s.parse_with_z3(filename, is_file=True)
     # print(s.objectives)
     fml = z3.And(s.assertions)
-    obj = s.objectives[0]
+    obj = s.objective
     # print(fml, obj)
     # 1. use z3 OPT
     z3_res = optimize_as_long(fml, obj)

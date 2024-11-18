@@ -13,11 +13,9 @@ from pysmt.typing import INT, REAL, BVType, BOOL
 from omt.config import g_enable_debug
 
 # BV1, BV8, BV16, BV32, BV64, BV128
-
 logger = logging.getLogger(__name__)
-
-
 # NOTE: both pysmt and z3 have a class "Solver"
+
 
 def to_pysmt_vars(z3vars: [z3.ExprRef]):
     res = []
@@ -57,8 +55,8 @@ def bv_opt_with_linear_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
     """
 
     obj, fml = convert_to_pysmt(z3_fml, z3_obj)
-    print(obj)
-    print(fml)
+    # print(obj)
+    # print(fml)
 
     with Solver(name=solver_name) as solver:
         solver.add_assertion(fml)

@@ -24,7 +24,6 @@ def find_smt_files(directory):
 
 
 def solve_file_with_omt_solver(file_path, args, timeout):
-    """Run 2ls tool on a given C file."""
     result = {'file': file_path, 'stdout': '', 'stderr': '', 'status': 'UNKNOWN'}
     try:
         process = subprocess.run(
