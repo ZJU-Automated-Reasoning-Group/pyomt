@@ -73,7 +73,7 @@ cmake --build build -j4
 eval "cd $current_dir"
 
 mkdir bin
-smt_binaries=("z3" "mathsat" "yices-smt2" "cvc5-Linux" "boolector" "bitwuzla", "q3b")
+smt_binaries=("z3" "mathsat" "yices-smt2" "cvc5-Linux" "boolector" "bitwuzla" "q3b")
 match=""
 flag=false
 for binary in "${smt_binaries[@]}"
