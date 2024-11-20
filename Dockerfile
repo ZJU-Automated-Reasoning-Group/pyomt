@@ -26,19 +26,24 @@ RUN apt-get update && apt-get install -y \
     libboost-all-dev \
     build-essential \
     default-jre \
-    zip
-
+    zip \
+    # for Bitwuzla
+    ninja-build \
+    pkg-config
 
 RUN mkdir omt
 COPY . /omt
 
-# install efmc package requirements
+# install omt package requirements
 RUN pip install -r /omt/requirements.txt
 
-
 # install cudd library
+RUN git clone -b 3val https://github.com/martinjonas/cudd.git
+RUN cd cudd && ./configure --enable-silent-rules --enable-obj --enable-shared && make -j4 && make install
+# install antlr
+RUN wget https://www.antlr.org/download/antlr-4.11.1-complete.jar -P /usr/share/java
 WORKDIR /omt/bin_solvers/
-RUN python3 /omt/bin_solvers/download.py
+RUN chmod +x /omt/bin_solvers/download.sh
 RUN /omt/bin_solvers/download.sh
 
 WORKDIR /
