@@ -77,7 +77,8 @@ class MaxSATSolver:
         try:
             assert self.sat_engine_name != "z3"
             """Use a SAT solver supported by pySAT"""
-            sat_oracle = Solver(name=self.sat_engine_name, bootstrap_with=self.hard, use_timer=True)
+            sat_oracle = Solver(name=self.sat_engine_name,
+                                bootstrap_with=self.hard, use_timer=True)
             # For each bit in bits, decide if it can be true
             for b in bits:
                 assumption_lits.append(b)
@@ -89,5 +90,6 @@ class MaxSATSolver:
         except Exception as ex:
             print(ex)
         # print("final assumptions: ", assumption_lits)
+        # FIXME: @wwq, it seems that this function has bugs
         return assumption_lits
-        # return obv_bs(self.hard, len(self.soft))  # FIXME: @wwq, it seems that this function has bugs
+        # return obv_bs(self.hard, len(self.soft))

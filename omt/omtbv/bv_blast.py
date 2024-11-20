@@ -20,15 +20,15 @@ from pysat.formula import CNF, WCNF
 from pysat.solvers import Solver
 from z3.z3util import get_vars
 
-from omt.utils.mapped_blast import translate_smt2formula_to_cnf
 from omt.maxsat.maxsat_solver import MaxSATSolver
+from omt.utils.mapped_blast import translate_smt2formula_to_cnf
 
 logger = logging.getLogger(__name__)
-
 
 sat_solvers_in_pysat = ['cd', 'cd15', 'gc3', 'gc4', 'g3',
                         'g4', 'lgl', 'mcb', 'mpl', 'mg3',
                         'mc', 'm22', 'msh']
+
 
 class BitBlastOMTBVSolver:
     """
@@ -41,10 +41,14 @@ class BitBlastOMTBVSolver:
         self.bool2id = {}  # map a Boolean variable to its internal ID in pysat
         self.vars = []
         self.verbose = 0
+        self.engine = "fm"
 
     def from_smt_formula(self, formula: z3.BoolRef):
         self.fml = formula
         self.vars = get_vars(self.fml)
+
+    def set_engine(self, solver_name: str):
+        self.engine = solver_name
 
     def bit_blast(self):
         """
@@ -144,31 +148,46 @@ class BitBlastOMTBVSolver:
         logger.debug("Start solving weighted Max-SAT via pySAT...")
         maxsat_sol = MaxSATSolver(wcnf)
 
-        # 1. Use an existing weighted MaxSAT solving algorithm
-        start = time.time()
-        maxsat_sol.set_maxsat_engine("FM")
-        cost = maxsat_sol.solve_wcnf()
-        logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - cost))
-        logger.debug("FM MaxSAT time: {}".format(time.time() - start))
+        if self.engine == "fm":
+            # 1. Use an existing weighted MaxSAT solving algorithm
+            start = time.time()
+            maxsat_sol.set_maxsat_engine("FM")
+            cost = maxsat_sol.solve_wcnf()
+            logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - cost))
+            logger.debug("FM MaxSAT time: {}".format(time.time() - start))
+            return total_score - cost
+        elif self.engine == "rc2":
+            start = time.time()
+            maxsat_sol.set_maxsat_engine("RC2")
+            cost = maxsat_sol.solve_wcnf()
+            logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - cost))
+            logger.debug("FM MaxSAT time: {}".format(time.time() - start))
+            return total_score - cost
+        elif self.engine == "obv-bs":
+            # 2. Use binary-search-based MaxSAT solving (specialized for OMT(BV))
+            start = time.time()
+            assumption_lits = maxsat_sol.tacas16_binary_search()
+            assumption_lits.reverse()
+            sum_score = 0
+            if is_signed:
+                for i in range(len(assumption_lits) - 1):
+                    if assumption_lits[i] > 0:
+                        sum_score += 2 ** i
+                # 符号位是1表示负数,是0表示正数?
+                if assumption_lits[-1] > 0:
+                    sum_score = -sum_score
+            else:
+                for i in range(len(assumption_lits)):
+                    if assumption_lits[i] > 0:
+                        sum_score += 2 ** i
+            logger.debug("\nmaximum of {0}: {1}".format(obj_str, sum_score))
+            logger.debug("TACAS16 MaxSAT time: {}".format(time.time() - start))
 
-        # 2. Use binary-search-based MaxSAT solving (specialized for OMT(BV))
-        start = time.time()
-        assumption_lits = maxsat_sol.tacas16_binary_search()
-        assumption_lits.reverse()
-        sum_score = 0
-        if is_signed:
-            for i in range(len(assumption_lits) - 1):
-                if assumption_lits[i] > 0:
-                    sum_score += 2 ** i
-            # 符号位是1表示负数,是0表示正数?
-            if assumption_lits[-1] > 0:
-                sum_score = -sum_score
+            return sum_score
         else:
-            for i in range(len(assumption_lits)):
-                if assumption_lits[i] > 0:
-                    sum_score += 2 ** i
-        logger.debug("\nmaximum of {0}: {1}".format(obj_str, sum_score))
-        logger.debug("TACAS16 MaxSAT time: {}".format(time.time() - start))
-
-        return sum_score
-
+            start = time.time()
+            maxsat_sol.set_maxsat_engine("FM")
+            cost = maxsat_sol.solve_wcnf()
+            logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - cost))
+            logger.debug("FM MaxSAT time: {}".format(time.time() - start))
+            return total_score - cost

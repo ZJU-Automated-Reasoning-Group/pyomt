@@ -38,7 +38,7 @@ def solve_opt_file(filename: str, solver_name: str):
     print("----------------------------------")
 
     # 3. use MaxSAT
-    maxsat_res = bv_opt_with_maxsat(fml, obj, minimize=False, solver_name="z3")
+    maxsat_res = bv_opt_with_maxsat(fml, obj, minimize=False, solver_name="fm")
     print("maxsat res: ", maxsat_res)
     print("----------------------------------")
 
@@ -49,29 +49,49 @@ def solve_opt_file(filename: str, solver_name: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Solve OMT(BV) problems with different solvers.")
-    parser.add_argument("filename", type=str, help="The filename of the problem to solve.")
+    def main():
+        parser = argparse.ArgumentParser(description="Solve OMT(BV) problems with different solvers.")
+        parser.add_argument("filename", type=str, help="The filename of the problem to solve.")
+        parser.add_argument("--engine", type=str, default="qsmt",
+                            choices=["qsmt", "maxsat", "iter"],
+                            help="Choose the engine to use")
 
-    # a better way is to divide the options into different groups
-    # e.g., for qsmt-based engine, maxsat-based engine, etc.
+        # Create argument groups for each engine
+        qsmt_group = parser.add_argument_group('qsmt', 'Arguments for the QSMT-based engine')
+        qsmt_group.add_argument("--solver-qsmt", type=str, default="z3",
+                                choices=["z3", "cvc5", "yices2", "mathsat", "bitwuzla"],
+                                help="Choose the quantified SMT solver to use.")
 
-    parser.add_argument("--engine", type=str, default="qsmt",
-                        choices=["", "cvc5", "btor", "yices2", "mathsat", "bitwuzla", "obv-bs"],
-                        help="Choose the engine to use")
+        maxsat_group = parser.add_argument_group('maxsat', 'Arguments for the MaxSAT-based engine')
+        maxsat_group.add_argument("--solver-maxsat", type=str, default="fm",
+                                  choices=["fm", "rc2", "obv-bs"],
+                                  help="Choose the weighted MaxSAT solver to use")
 
-    parser.add_argument("--solver", type=str, default="z3",
-                        choices=["z3", "cvc5", "btor", "yices2", "mathsat", "bitwuzla", "obv-bs"],
-                        help="Choose the solver to use.")
-    parser.add_argument("--seed", type=int, default=1, help="Random seed.")
-    parser.add_argument("--log-level", type=str, default="INFO",
-                        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-                        help="Set the logging level.")
+        iter_group = parser.add_argument_group('iter', 'Arguments for the iter-based engine')
+        iter_group.add_argument("--solver-iter", type=str, default="z3",
+                                choices=["z3", "cvc5", "yices2", "mathsat"],
+                                help="Choose the quantifier-free SMT solver to use.")
 
-    args = parser.parse_args()
+        parser.add_argument("--seed", type=int, default=1, help="Random seed.")
+        parser.add_argument("--log-level", type=str, default="INFO",
+                            choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                            help="Set the logging level.")
 
-    logging.basicConfig(level=getattr(logging, args.log_level.upper(), None))
+        args = parser.parse_args()
 
-    solve_opt_file(args.filename, args.solver)
+        logging.basicConfig(level=getattr(logging, args.log_level.upper(), None))
+
+        # Ensure the correct solver is used based on the selected engine
+        if args.engine == "qsmt":
+            solver = args.solver_qsmt
+        elif args.engine == "maxsat":
+            solver = args.solver_maxsat
+        elif args.engine == "iter":
+            solver = args.solver_iter
+        else:
+            raise ValueError("Invalid engine specified")
+
+        solve_opt_file(args.filename, solver)
 
 
 if __name__ == "__main__":
