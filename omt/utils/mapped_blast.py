@@ -188,6 +188,7 @@ def dimacs_visitor_numeric(exp, table):
 
 
 def collect_vars(exp, seen=None):
+    # TODO: is this function correct?
     if seen is None:
         seen = {}
     if exp in seen:

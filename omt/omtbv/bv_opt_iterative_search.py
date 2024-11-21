@@ -11,6 +11,7 @@ from pysmt.logics import QF_BV  # AUTO
 from pysmt.typing import INT, REAL, BVType, BOOL
 
 from omt.config import g_enable_debug
+from omt.utils.z3expr_utils import get_expr_vars
 
 # BV1, BV8, BV16, BV32, BV64, BV128
 logger = logging.getLogger(__name__)
@@ -37,7 +38,9 @@ def convert_to_pysmt(zf: z3.ExprRef, obj: z3.ExprRef):
     # FIXME: we use  the following two lines to hide warnings from PYSMT(?)
     #  However, they seem not to be necessary and z3.z3util.get_vars can be very slow
     #  (Is the warning caused py pySMT?)
-    zvs = z3.z3util.get_vars(zf)  # this can be very slow...
+    # zvs = z3.z3util.get_vars(zf)  # this can be very slow...
+    zvs = get_expr_vars(zf)
+
     _ = to_pysmt_vars(zvs)
 
     #

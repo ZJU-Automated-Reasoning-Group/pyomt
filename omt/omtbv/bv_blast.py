@@ -19,6 +19,7 @@ import z3
 from pysat.formula import CNF, WCNF
 from pysat.solvers import Solver
 from z3.z3util import get_vars
+from omt.utils.z3expr_utils import get_expr_vars
 
 from omt.maxsat.maxsat_solver import MaxSATSolver
 from omt.utils.mapped_blast import translate_smt2formula_to_cnf
@@ -45,7 +46,8 @@ class BitBlastOMTBVSolver:
 
     def from_smt_formula(self, formula: z3.BoolRef):
         self.fml = formula
-        self.vars = get_vars(self.fml)
+        # elf.vars = get_vars(self.fml)
+        self.vars = get_expr_vars(self.fml)
 
     def set_engine(self, solver_name: str):
         self.engine = solver_name

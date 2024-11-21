@@ -7,10 +7,27 @@
 
 ### Reduce to Quantified SMT
 
+- Z3
+- CVC5
+- Yices-QS
+- Bitwuzla
+
 ### Reduce to Weighted MaxSAT
 
+
+- The OBV-BS algorithm
+- The FM algorithm
+- The RC2 algorithm
 - Off-the-shelf MaxSAT solvers
-- The OBV(BS) algorithm
+~~~~
+https://github.com/FlorentAvellaneda/EvalMaxSAT
+
+~~~~
+
+### Exiting OMT Solver
+- Z3 (to MaxSAT?)
+- OptimathSAT
+- ...
 
 ### SMT-based Iterative Search
 
