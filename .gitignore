@@ -1,3 +1,4 @@
+pyomt.egg-info/
 tmp_files/*
 !data/regressions/chc
 bin_solvers/*
