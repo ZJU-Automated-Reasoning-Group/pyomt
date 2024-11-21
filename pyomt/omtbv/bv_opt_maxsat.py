@@ -9,7 +9,7 @@ from typing import List
 
 import z3
 
-from pyomt.omtbv.bv_blast import BitBlastOMTBVSolver
+from pyomt.omtbv.bit_blast_omt_solver import BitBlastOMTBVSolver
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def demo_maxsat():
     x, y, z = z3.BitVecs("x y z", 4)
     fml = z3.And(z3.UGT(y, 3), z3.ULT(y, 10))
     print("start solving")
-    res = bv_opt_with_maxsat(fml, y, minimize=True, solver_name="fm")
+    res = bv_opt_with_maxsat(fml, y, minimize=True, solver_name="FM")
     print(res)
     start = time.time()
     print("solving time: ", time.time() - start)

@@ -38,7 +38,7 @@ def solve_opt_file(filename: str, solver_name: str):
     print("----------------------------------")
 
     # 3. use MaxSAT
-    maxsat_res = bv_opt_with_maxsat(fml, obj, minimize=False, solver_name="fm")
+    maxsat_res = bv_opt_with_maxsat(fml, obj, minimize=False, solver_name="FM")
     print("maxsat res: ", maxsat_res)
     print("----------------------------------")
 
@@ -63,8 +63,8 @@ def main():
                                 help="Choose the quantified SMT solver to use.")
 
         maxsat_group = parser.add_argument_group('maxsat', 'Arguments for the MaxSAT-based engine')
-        maxsat_group.add_argument("--solver-maxsat", type=str, default="fm",
-                                  choices=["fm", "rc2", "obv-bs"],
+        maxsat_group.add_argument("--solver-maxsat", type=str, default="FM",
+                                  choices=["FM", "RC2", "OBV-BS"],
                                   help="Choose the weighted MaxSAT solver to use")
 
         iter_group = parser.add_argument_group('iter', 'Arguments for the iter-based engine')

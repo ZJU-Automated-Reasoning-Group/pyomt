@@ -33,7 +33,7 @@ sat_solvers_in_pysat = ['cd', 'cd15', 'gc3', 'gc4', 'g3',
 
 class BitBlastOMTBVSolver:
     """
-    NOTE: we Focus on boxed multi-objective OMT (lexixxorder and pareto not supported yet)
+    NOTE: the exact MaxSAT solver is in pyomt.maxsat.maxsat_solver.py
     """
 
     def __init__(self):
@@ -109,7 +109,8 @@ class BitBlastOMTBVSolver:
 
         if obj not in self.vars:
             # print(obj, "is not a var in self.vars")
-            objvars = get_vars(obj)  # FIXME: get_vars can be slow
+            # objvars = get_vars(obj)  # FIXME: get_vars can be slow
+            objvars = get_expr_vars(obj)
             for v in objvars:
                 if v not in self.vars:
                     raise Exception(str(obj), "contains a var not in the hard formula")
@@ -150,26 +151,26 @@ class BitBlastOMTBVSolver:
         logger.debug("Start solving weighted Max-SAT via pySAT...")
         maxsat_sol = MaxSATSolver(wcnf)
 
-        if self.engine == "fm":
+        if self.engine == "FM":
             # 1. Use an existing weighted MaxSAT solving algorithm
             start = time.time()
             maxsat_sol.set_maxsat_engine("FM")
-            cost = maxsat_sol.solve_wcnf()
+            cost = maxsat_sol.solve()
             logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - cost))
             logger.debug("FM MaxSAT time: {}".format(time.time() - start))
             return total_score - cost
-        elif self.engine == "rc2":
+        elif self.engine == "RC2":
             start = time.time()
             maxsat_sol.set_maxsat_engine("RC2")
-            cost = maxsat_sol.solve_wcnf()
+            cost = maxsat_sol.solve()
             logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - cost))
             logger.debug("FM MaxSAT time: {}".format(time.time() - start))
             return total_score - cost
-        elif self.engine == "obv-bs":
+        elif self.engine == "OBV-BS":
             # 2. Use binary-search-based MaxSAT solving (specialized for OMT(BV))
             start = time.time()
-            assumption_lits = maxsat_sol.tacas16_binary_search()
-            assumption_lits.reverse()
+            assumption_lits = maxsat_sol.solve()
+            assumption_lits.reverse()  # TODO: do we need this
             sum_score = 0
             if is_signed:
                 for i in range(len(assumption_lits) - 1):
@@ -189,7 +190,7 @@ class BitBlastOMTBVSolver:
         else:
             start = time.time()
             maxsat_sol.set_maxsat_engine("FM")
-            cost = maxsat_sol.solve_wcnf()
+            cost = maxsat_sol.solve()
             logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - cost))
             logger.debug("FM MaxSAT time: {}".format(time.time() - start))
             return total_score - cost

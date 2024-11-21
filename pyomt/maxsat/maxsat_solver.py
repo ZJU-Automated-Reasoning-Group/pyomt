@@ -40,7 +40,7 @@ class MaxSATSolver:
         """Get MaxSAT engine"""
         return self.maxsat_engine
 
-    def solve_wcnf(self):
+    def solve(self):
         """TODO: support Popen-based approach for calling bin solvers (e.g., open-wbo)"""
         if self.maxsat_engine == "FM":
             fm = FM(self.wcnf, verbose=0)
@@ -51,7 +51,7 @@ class MaxSATSolver:
             rc2 = RC2(self.wcnf)
             rc2.compute()
             return rc2.cost
-        elif self.maxsat_engine == "obv-bs":
+        elif self.maxsat_engine == "OBV-BS":
             bits = []
             for i in reversed(range(len(self.soft))):
                 bits.append(self.soft[i][0])

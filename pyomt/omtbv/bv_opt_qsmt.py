@@ -23,6 +23,11 @@ def bv_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_na
     else:
         qfml = z3.And(fml,
                       z3.ForAll([obj_misc], z3.Implies(new_fml, z3.ULE(obj_misc, obj))))
+
+    # TODO: why not allowing for using pySMT?...
+    # s = z3.Solver()
+    # s.add(qfml)
+    # return s.check()
     return solve_with_bin_smt("BV", qfml=qfml, obj_name=obj.sexpr(), solver_name=solver_name)
 
 
