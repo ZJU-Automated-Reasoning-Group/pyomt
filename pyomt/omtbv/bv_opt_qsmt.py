@@ -8,7 +8,7 @@ that support quantified bit-vector formulas
 """
 
 import z3
-from omt.utils.bin_solver import solve_with_bin_smt
+from pyomt.utils.bin_solver import solve_with_bin_smt
 
 
 def bv_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_name: str):

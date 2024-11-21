@@ -10,9 +10,9 @@ from threading import Timer
 
 import z3
 
-from omt.config import (
+from pyomt.utils.config import (
     z3_exec, cvc5_exec, g_bin_solver_timeout,
-    btor_exec, bitwuzla_exec, yices_exec, math_exec, q3b_exec
+    btor_exec, bitwuzla_exec, math_exec, q3b_exec
 )
 
 logger = logging.getLogger(__name__)

@@ -2,12 +2,12 @@ import logging
 import argparse
 import z3
 
-from omt.utils.opt_parser import OMTParser
-from omt.omtbv.bv_opt_iterative_search import bv_opt_with_linear_search, \
+from pyomt.utils.opt_parser import OMTParser
+from pyomt.omtbv.bv_opt_iterative_search import bv_opt_with_linear_search, \
     bv_opt_with_binary_search
-from omt.omtbv.bv_opt_maxsat import bv_opt_with_maxsat
-from omt.omtbv.bv_opt_qsmt import bv_opt_with_qsmt
-from omt.utils.z3opt_utils import optimize_as_long
+from pyomt.omtbv.bv_opt_maxsat import bv_opt_with_maxsat
+from pyomt.omtbv.bv_opt_qsmt import bv_opt_with_qsmt
+from pyomt.utils.z3opt_utils import optimize_as_long
 
 logger = logging.getLogger(__name__)
 

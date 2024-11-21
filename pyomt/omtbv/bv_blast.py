@@ -19,10 +19,10 @@ import z3
 from pysat.formula import CNF, WCNF
 from pysat.solvers import Solver
 from z3.z3util import get_vars
-from omt.utils.z3expr_utils import get_expr_vars
+from pyomt.utils.z3expr_utils import get_expr_vars
 
-from omt.maxsat.maxsat_solver import MaxSATSolver
-from omt.utils.mapped_blast import translate_smt2formula_to_cnf
+from pyomt.maxsat.maxsat_solver import MaxSATSolver
+from pyomt.utils.mapped_blast import translate_smt2formula_to_cnf
 
 logger = logging.getLogger(__name__)
 

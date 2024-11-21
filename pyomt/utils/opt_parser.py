@@ -3,10 +3,10 @@
 import z3
 from z3.z3consts import *
 
-from omt.omtbv.bv_opt_iterative_search import bv_opt_with_linear_search, \
+from pyomt.omtbv.bv_opt_iterative_search import bv_opt_with_linear_search, \
     bv_opt_with_binary_search
-from omt.omtbv.bv_opt_maxsat import bv_opt_with_maxsat
-from omt.omtbv.bv_opt_qsmt import bv_opt_with_qsmt
+from pyomt.omtbv.bv_opt_maxsat import bv_opt_with_maxsat
+from pyomt.omtbv.bv_opt_qsmt import bv_opt_with_qsmt
 
 
 class OMTParser:
@@ -66,7 +66,7 @@ class OMTParser:
 
 
 def demo_omt_parser():
-    from omt.utils.z3opt_utils import optimize_as_long
+    from pyomt.utils.z3opt_utils import optimize_as_long
     fml_two = """
     (declare-const x (_ BitVec 4)) \n (declare-const y (_ BitVec 4)) \n
     (assert (bvult x (_ bv5 4))) \n (assert (bvuge y (_ bv3 4))) \n

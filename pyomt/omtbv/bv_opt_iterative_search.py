@@ -3,15 +3,14 @@ TODO. pysmt cannot handle bit-vector operations in a few formulas generaed by z3
  E.g., it may haave a more strict restriction on
   the number of arguments to certain bit-vector options
 """
-from pysmt.shortcuts import BV, BVULT, BVUGT, Solver, Symbol
-from pysmt.shortcuts import Symbol, And, Not, Or, Ite, BV, BVUGE, BVULE, Solver, is_sat
+from pysmt.shortcuts import BVULT, BVUGT
+from pysmt.shortcuts import Symbol, And, BV, BVUGE, BVULE, Solver
 import logging
 import z3
-from pysmt.logics import QF_BV  # AUTO
 from pysmt.typing import INT, REAL, BVType, BOOL
 
-from omt.config import g_enable_debug
-from omt.utils.z3expr_utils import get_expr_vars
+from pyomt.utils.config import g_enable_debug
+from pyomt.utils.z3expr_utils import get_expr_vars
 
 # BV1, BV8, BV16, BV32, BV64, BV128
 logger = logging.getLogger(__name__)

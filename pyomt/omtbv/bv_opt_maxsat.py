@@ -9,7 +9,7 @@ from typing import List
 
 import z3
 
-from omt.omtbv.bv_blast import BitBlastOMTBVSolver
+from pyomt.omtbv.bv_blast import BitBlastOMTBVSolver
 
 logger = logging.getLogger(__name__)
 

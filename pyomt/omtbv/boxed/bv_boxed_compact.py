@@ -2,7 +2,7 @@ import os
 import subprocess
 import time
 
-from omt.omtbv.bv_opt_utils import cnt, res_z3_trans
+from pyomt.omtbv.bv_opt_utils import cnt, res_z3_trans
 from pysmt.shortcuts import *
 from pysmt.smtlib.parser import SmtLibParser
 from pysmt.smtlib.script import SmtLibCommand

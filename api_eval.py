@@ -3,7 +3,7 @@ import time
 
 from z3 import *
 
-from omt.utils.z3expr_utils import get_expr_vars_z3default, get_expr_vars
+from pyomt.utils.z3expr_utils import get_expr_vars_z3default, get_expr_vars
 
 
 def are_lists_identical(list1, list2):

@@ -10,9 +10,9 @@ import copy
 
 from pysat.formula import WCNF
 
-from omt.maxsat.bs import obv_bs
-from omt.maxsat.fm import FM  # is the FM correct???
-from omt.maxsat.rc2 import RC2
+from pyomt.maxsat.bs import obv_bs
+from pyomt.maxsat.fm import FM  # is the FM correct???
+from pyomt.maxsat.rc2 import RC2
 
 
 class MaxSATSolver:

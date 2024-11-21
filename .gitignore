@@ -7,7 +7,7 @@ tmp.py
 Result/*
 .DS_Store
 .pytest_cache
-omt/.pytest_cache
+pyomt/.pytest_cache
 *.qdimacs
 *.dot
 venv
