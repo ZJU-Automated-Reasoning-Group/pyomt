@@ -9,6 +9,11 @@ that support quantified bit-vector formulas
 
 import z3
 from pyomt.utils.bin_solver import solve_with_bin_smt
+from pyomt.utils.pysmt_utils import ForAll, Exists
+
+
+def solve_with_pysmt():
+    raise NotImplementedError
 
 
 def bv_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_name: str):
@@ -17,6 +22,7 @@ def bv_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_na
     obj_misc = z3.BitVec(str(obj) + "m", obj.size())
     new_fml = z3.substitute(fml, (obj, obj_misc))
     # TODO: bvule or < (distinguish between unsigned and signed...)
+
     if minimize:
         qfml = z3.And(fml,
                       z3.ForAll([obj_misc], z3.Implies(new_fml, z3.ULE(obj, obj_misc))))
@@ -25,10 +31,10 @@ def bv_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_na
                       z3.ForAll([obj_misc], z3.Implies(new_fml, z3.ULE(obj_misc, obj))))
 
     # TODO: why not allowing for using pySMT?...
-    # s = z3.Solver()
-    # s.add(qfml)
-    # return s.check()
-    return solve_with_bin_smt("BV", qfml=qfml, obj_name=obj.sexpr(), solver_name=solver_name)
+    if z3.is_bv(obj):
+        return solve_with_bin_smt("BV", qfml=qfml, obj_name=obj.sexpr(), solver_name=solver_name)
+    else:
+        return solve_with_bin_smt("ALL", qfml=qfml, obj_name=obj.sexpr(), solver_name=solver_name)
 
 
 def demo_qsmt():

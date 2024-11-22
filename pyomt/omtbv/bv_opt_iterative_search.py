@@ -3,51 +3,15 @@ TODO. pysmt cannot handle bit-vector operations in a few formulas generaed by z3
  E.g., it may haave a more strict restriction on
   the number of arguments to certain bit-vector options
 """
-from pysmt.shortcuts import BVULT, BVUGT
-from pysmt.shortcuts import Symbol, And, BV, BVUGE, BVULE, Solver
 import logging
 import z3
-from pysmt.typing import INT, REAL, BVType, BOOL
-
 from pyomt.utils.config import g_enable_debug
 from pyomt.utils.z3expr_utils import get_expr_vars
 
-# BV1, BV8, BV16, BV32, BV64, BV128
+from pyomt.utils.pysmt_utils import *
+
+
 logger = logging.getLogger(__name__)
-# NOTE: both pysmt and z3 have a class "Solver"
-
-
-def to_pysmt_vars(z3vars: [z3.ExprRef]):
-    res = []
-    for v in z3vars:
-        if z3.is_int(v):
-            res.append(Symbol(v.decl().name(), INT))
-        elif z3.is_real(v):
-            res.append(Symbol(v.decl().name(), REAL))
-        elif z3.is_bv(v):
-            res.append(Symbol(v.decl().name(), BVType(v.sort().size())))
-        elif z3.is_bool(v):
-            res.append(Symbol(v.decl().name(), BOOL))
-        else:
-            raise NotImplementedError
-    return res
-
-
-def convert_to_pysmt(zf: z3.ExprRef, obj: z3.ExprRef):
-    # FIXME: we use  the following two lines to hide warnings from PYSMT(?)
-    #  However, they seem not to be necessary and z3.z3util.get_vars can be very slow
-    #  (Is the warning caused py pySMT?)
-    # zvs = z3.z3util.get_vars(zf)  # this can be very slow...
-    zvs = get_expr_vars(zf)
-
-    _ = to_pysmt_vars(zvs)
-
-    #
-    z3s = Solver(name='z3')
-    pysmt_var = Symbol(obj.decl().name(), BVType(obj.sort().size()))
-    pysmt_fml = z3s.converter.back(zf)
-    return pysmt_var, pysmt_fml
-    # return pysmt_vars, pysmt_fml
 
 
 def bv_opt_with_linear_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
@@ -56,7 +20,7 @@ def bv_opt_with_linear_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
     solver_name: the backend SMT solver for pySMT
     """
 
-    obj, fml = convert_to_pysmt(z3_fml, z3_obj)
+    obj, fml = z3_to_pysmt(z3_fml, z3_obj)
     # print(obj)
     # print(fml)
 
@@ -90,7 +54,7 @@ def bv_opt_with_linear_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
 def bv_opt_with_binary_search(z3_fml, z3_obj, minimize: bool, solver_name: str):
     """Binary Search based OMT using PySMT with bit-vectors."""
     # Convert Z3 expressions to PySMT
-    obj, fml = convert_to_pysmt(z3_fml, z3_obj)
+    obj, fml = z3_to_pysmt(z3_fml, z3_obj)
     print(obj)
     print(fml)
 

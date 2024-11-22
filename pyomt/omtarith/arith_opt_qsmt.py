@@ -1,5 +1,6 @@
 import z3
 from pyomt.utils.bin_solver import solve_with_bin_smt
+from pyomt.utils.pysmt_utils import ForAll, Exists
 
 
 def arith_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_name: str):
@@ -22,6 +23,7 @@ def arith_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver
                       z3.ForAll([obj_misc], z3.Implies(new_fml, obj_misc <= obj)))
 
     # print(qfml)
+    # TODO: why not allowing for using pySMT?...
 
     if is_int:
         return solve_with_bin_smt("LIA", qfml=qfml,
