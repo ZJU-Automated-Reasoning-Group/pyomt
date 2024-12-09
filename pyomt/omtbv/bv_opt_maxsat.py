@@ -27,7 +27,7 @@ def bv_opt_with_maxsat(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
         # is the following right?
         tmp = omt.maximize_with_maxsat(-z3_obj, is_signed=False)
         print(tmp)
-        return max_bv - tmp
+        return max_bv + 1 - tmp
     else:
         return omt.maximize_with_maxsat(z3_obj, is_signed=False)
 

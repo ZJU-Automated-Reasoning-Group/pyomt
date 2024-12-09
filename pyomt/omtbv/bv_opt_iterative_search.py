@@ -55,8 +55,8 @@ def bv_opt_with_binary_search(z3_fml, z3_obj, minimize: bool, solver_name: str):
     """Binary Search based OMT using PySMT with bit-vectors."""
     # Convert Z3 expressions to PySMT
     obj, fml = z3_to_pysmt(z3_fml, z3_obj)
-    print(obj)
-    print(fml)
+    # print(obj)
+    # print(fml)
 
     sz = obj.bv_width()
     max_bv = (1 << sz) - 1

@@ -12,7 +12,7 @@ import z3
 
 from pyomt.utils.config import (
     z3_exec, cvc5_exec, g_bin_solver_timeout,
-    btor_exec, bitwuzla_exec, math_exec, q3b_exec
+    btor_exec, bitwuzla_exec, yices_exec, math_exec, q3b_exec
 )
 
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ def get_smt_solver_command(solver_name: str, tmp_filename: str) -> List[str]:
         "z3": [z3_exec, tmp_filename],
         "cvc5": [cvc5_exec, "-q", "--produce-models", tmp_filename],
         "btor": [btor_exec, tmp_filename],
-        "boolector": [btor_exec, tmp_filename],
+        "yices": [yices_exec, tmp_filename],
         "mathsat": [math_exec, tmp_filename],
         "bitwuzla": [bitwuzla_exec, tmp_filename],
         "q3b": [q3b_exec, tmp_filename],
