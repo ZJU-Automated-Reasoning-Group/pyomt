@@ -1,6 +1,6 @@
 from pathlib import Path
 
-project_root_dir = str(Path(__file__).parent.parent)
+project_root_dir = str(Path(__file__).parent.parent.parent)
 z3_exec = project_root_dir + "/bin_solvers/bin/z3"
 cvc5_exec = project_root_dir + "/bin_solvers/bin/cvc5-Linux"
 btor_exec = project_root_dir + "/bin_solvers/bin/boolector"

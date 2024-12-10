@@ -36,6 +36,7 @@ COPY . /omt
 
 # install omt package requirements
 RUN pip install -r /omt/requirements.txt
+ENV PYTHONPATH /omt
 
 # install cudd library
 RUN git clone -b 3val https://github.com/martinjonas/cudd.git
