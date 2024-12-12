@@ -1,13 +1,13 @@
-import logging
 import argparse
+import logging
+
 import z3
 
-from pyomt.utils.opt_parser import OMTParser
 from pyomt.omtbv.bv_opt_iterative_search import bv_opt_with_linear_search, \
     bv_opt_with_binary_search
 from pyomt.omtbv.bv_opt_maxsat import bv_opt_with_maxsat
 from pyomt.omtbv.bv_opt_qsmt import bv_opt_with_qsmt
-from pyomt.utils.z3opt_utils import optimize_as_long
+from pyomt.utils.opt_parser import OMTParser
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def solve_opt_file(filename: str, engine: str, solver_name: str):
         print("maxsat res: ", maxsat_res)
         print("----------------------------------")
     elif engine == 'qsmt':
-    # 4. use QSMT
+        # 4. use QSMT
         qsmt_res = bv_opt_with_qsmt(fml, obj, minimize=False, solver_name=solver_name)
         print("qsmt res: ", qsmt_res)
         print("----------------------------------")
@@ -70,13 +70,13 @@ def main():
 
     maxsat_group = parser.add_argument_group('maxsat', 'Arguments for the MaxSAT-based engine')
     maxsat_group.add_argument("--solver-maxsat", type=str, default="FM",
-                                choices=["FM", "RC2", "OBV-BS"],
-                                help="Choose the weighted MaxSAT solver to use")
+                              choices=["FM", "RC2", "OBV-BS"],
+                              help="Choose the weighted MaxSAT solver to use")
 
     iter_group = parser.add_argument_group('iter', 'Arguments for the iter-based engine')
     iter_group.add_argument("--solver-iter", type=str, default="z3",
-                            choices= [i + '-ls' for i in ["z3", "cvc5", "yices", "msat", "btor"]] 
-                            + [i + '-bs' for i in ["z3", "cvc5", "yices", "msat", "btor"]],
+                            choices=[i + '-ls' for i in ["z3", "cvc5", "yices", "msat", "btor"]]
+                                    + [i + '-bs' for i in ["z3", "cvc5", "yices", "msat", "btor"]],
                             help="Choose the quantifier-free SMT solver to use.")
 
     parser.add_argument("--seed", type=int, default=1, help="Random seed.")

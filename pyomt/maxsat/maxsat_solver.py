@@ -7,12 +7,22 @@ TODO: add interfaces for calling binary solvers?
 """
 
 import copy
+from dataclasses import dataclass
+from typing import List, Optional
 
 from pysat.formula import WCNF
 
 from pyomt.maxsat.bs import obv_bs
 from pyomt.maxsat.fm import FM  # is the FM correct???
 from pyomt.maxsat.rc2 import RC2
+
+
+@dataclass
+class SolverResult:
+    """Stores the results of a MaxSAT solving operation"""
+    cost: float
+    solution: Optional[List[int]] = None
+    runtime: Optional[float] = None
 
 
 class MaxSATSolver:
@@ -26,6 +36,8 @@ class MaxSATSolver:
         """
         self.maxsat_engine = "FM"
         self.wcnf = formula
+        # Why do we need the following three lines?
+        # Cannot we get them from self.wcnf?
         self.hard = copy.deepcopy(formula.hard)
         self.soft = copy.deepcopy(formula.soft)
         self.weight = formula.wght[:]
@@ -39,6 +51,11 @@ class MaxSATSolver:
     def get_maxsat_engine(self):
         """Get MaxSAT engine"""
         return self.maxsat_engine
+
+    @property
+    def formula(self) -> WCNF:
+        """Get the current MaxSAT formula"""
+        return self.wcnf
 
     def solve(self):
         """TODO: support Popen-based approach for calling bin solvers (e.g., open-wbo)"""
