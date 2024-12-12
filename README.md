@@ -1,7 +1,8 @@
 # A library for OMT(BV) Solving
 
 
-## The Problem
+Optimization Modulo Theory (OMT) extends Satisfiability Modulo Theories (SMT)
+by incorporating optimization objectives.
 
 ## The Engines
 
@@ -24,18 +25,19 @@ https://github.com/FlorentAvellaneda/EvalMaxSAT
 
 ~~~~
 
-### Exiting OMT Solver
-- Z3 (to MaxSAT?)
-- OptimathSAT
-- ...
-
 ### SMT-based Iterative Search
 
 - Linear search
 - Binary search
 
 ## TBD
-- Differential testing?
+
+Differential testing?
+
+Exiting OMT solvers?
+- Z3 (to MaxSAT?)
+- OptimathSAT
+- ...
 
 ~~~~
 pysmt.exceptions.ConvertExpressionError: Unsupported expression: bvxnor(bv_41-0, bv_41-0)
