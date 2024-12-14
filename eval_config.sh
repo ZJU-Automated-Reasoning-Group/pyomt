@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# set -euo pipefail  # Exit on error, undefined var, pipe failure
+
+
 engines=("iter" "maxsat" "qsmt")
 iter_solvers=("z3" "cvc5" "yices" "msat" "btor")
 iter_methods=("ls" "bs")

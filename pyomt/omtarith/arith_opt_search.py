@@ -12,20 +12,15 @@ The search space is characterized by SMT formulas, supporting both
 real and integer variables.
 """
 
-"""
-Search-based optimization for Optimization Modulo Theory (OMT) problems.
-The search space is characterized by SMT formulas, supporting both
-real and integer variables.
-"""
-
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Callable, Dict, List, Optional, Set, Tuple, Union, Any
+from abc import ABC, abstractmethod
 import random
 import math
 import time
-from abc import ABC, abstractmethod
-
+import statistics
+# import numpy as np
 import z3
 
 Number = Union[int, float]
@@ -38,80 +33,103 @@ class OptimizationType(Enum):
 
 
 @dataclass
+class OptimizationConfig:
+    """Configuration parameters for optimization algorithms"""
+    max_iterations: int = 1000
+    timeout_seconds: float = float('inf')
+    population_size: int = 50
+    mutation_rate: float = 0.1
+    crossover_rate: float = 0.8
+    initial_temp: float = 1.0
+    cooling_rate: float = 0.95
+    adaptation_rate: float = 0.1
+    constraint_penalty: float = 1e6
+
+
+@dataclass
 class SMTSearchSpace:
     """Search space defined by SMT constraints"""
-
     solver: z3.Solver
-    variables: Dict[str, SMTVar]  # Map of variable names to SMT variables
-    bounds: Dict[str, Tuple[Number, Number]]  # Map of variable names to bounds
+    variables: Dict[str, SMTVar]
+    bounds: Dict[str, Tuple[Number, Number]]
+    dimensions: int = field(init=False)
 
     def __post_init__(self):
         self.dimensions = len(self.variables)
         self._add_bounds_constraints()
+        self._validate_configuration()
+
+    def _validate_configuration(self):
+        """Validate search space configuration"""
+        if not self.variables:
+            raise ValueError("No variables defined in search space")
+        if set(self.variables.keys()) != set(self.bounds.keys()):
+            raise ValueError("Variables and bounds must match")
+        for name, (lb, ub) in self.bounds.items():
+            if lb >= ub:
+                raise ValueError(f"Invalid bounds for {name}: [{lb}, {ub}]")
 
     def _add_bounds_constraints(self):
         """Add bounds as constraints to the solver"""
         for name, var in self.variables.items():
             lb, ub = self.bounds[name]
-            self.solver.add(var >= lb)
-            self.solver.add(var <= ub)
+            self.solver.add(var >= lb, var <= ub)
 
-    def is_feasible(self, assignment: Dict[str, Number]) -> bool:
+    def is_feasible(self, assignment: Dict[str, Number], threshold: float = 1e-6) -> bool:
         """Check if an assignment satisfies all constraints"""
         solver_copy = self.solver.translate(z3.main_ctx())
-
-        # Add assignment constraints
         for name, value in assignment.items():
             var = self.variables[name]
-            solver_copy.add(var == value)
-
+            if isinstance(var, z3.IntNumRef):
+                solver_copy.add(var == int(round(value)))
+            else:
+                solver_copy.add(z3.And(var >= value - threshold, var <= value + threshold))
         return solver_copy.check() == z3.sat
 
-    def get_random_feasible(self) -> Optional[Dict[str, Number]]:
+    def get_random_feasible(self, max_attempts: int = 100) -> Optional[Dict[str, Number]]:
         """Generate a random feasible solution"""
-        MAX_ATTEMPTS = 100
-
-        for _ in range(MAX_ATTEMPTS):
-            # Generate random assignment
-            assignment = {}
-            for name, (lb, ub) in self.bounds.items():
-                var = self.variables[name]
-                if isinstance(var, z3.IntNumRef):
-                    value = random.randint(int(lb), int(ub))
-                else:
-                    value = random.uniform(lb, ub)
-                assignment[name] = value
-
+        for attempt in range(max_attempts):
+            assignment = self._generate_random_assignment()
             if self.is_feasible(assignment):
                 return assignment
-
+            if attempt % 10 == 9:  # Every 10 attempts, try repair mechanism
+                repaired = self.get_nearest_feasible(assignment)
+                if repaired is not None:
+                    return repaired
         return None
 
-    def get_nearest_feasible(self, point: Dict[str, Number]) -> Optional[Dict[str, Number]]:
-        """Find nearest feasible point using optimization"""
-        optimizer = z3.Optimize()
+    def _generate_random_assignment(self) -> Dict[str, Number]:
+        """Generate a random assignment within bounds"""
+        assignment = {}
+        for name, (lb, ub) in self.bounds.items():
+            var = self.variables[name]
+            if isinstance(var, z3.IntNumRef):
+                value = random.randint(int(lb), int(ub))
+            else:
+                value = random.uniform(lb, ub)
+            assignment[name] = value
+        return assignment
 
-        # Add original constraints
+    def get_nearest_feasible(self, point: Dict[str, Number]) -> Optional[Dict[str, Number]]:
+        """Find the nearest feasible point using optimization"""
+        optimizer = z3.Optimize()
         optimizer.add(self.solver.assertions())
 
-        # Create variables for new point
         new_vars = {name: type(var)('new_' + name)
                     for name, var in self.variables.items()}
 
-        # Add bounds for new variables
-        for name, (lb, ub) in self.bounds.items():
-            optimizer.add(new_vars[name] >= lb)
-            optimizer.add(new_vars[name] <= ub)
-
-        # Minimize distance to original point
+        # Add bounds and distance objective
         distance = 0
         for name, var in new_vars.items():
-            distance += (var - point[name]) * (var - point[name])
+            lb, ub = self.bounds[name]
+            optimizer.add(var >= lb, var <= ub)
+            distance += (var - point[name]) ** 2
+
         optimizer.minimize(distance)
 
         if optimizer.check() == z3.sat:
             model = optimizer.model()
-            return {name: float(model[var].as_decimal(10).rstrip('?'))
+            return {name: float(str(model[var]))
                     for name, var in new_vars.items()}
         return None
 
@@ -124,6 +142,8 @@ class SearchResult:
     history: List[Tuple[Dict[str, Number], Number]]
     iterations: int
     time_taken: float
+    converged: bool
+    feasible: bool
 
 
 class SMTOptimizer(ABC):
@@ -132,16 +152,19 @@ class SMTOptimizer(ABC):
     def __init__(self,
                  objective_fn: Callable[[Dict[str, Number]], Number],
                  search_space: SMTSearchSpace,
+                 config: OptimizationConfig,
                  optimization_type: OptimizationType = OptimizationType.MINIMIZE):
         self.objective_fn = objective_fn
         self.search_space = search_space
+        self.config = config
         self.optimization_type = optimization_type
         self.best_solution = None
         self.best_value = float('inf') if optimization_type == OptimizationType.MINIMIZE else float('-inf')
 
     def _evaluate(self, solution: Dict[str, Number]) -> Number:
-        """Evaluate solution with feasibility check"""
+        """Evaluate solution with feasibility check and penalty"""
         if not self.search_space.is_feasible(solution):
+            penalty = self.config.constraint_penalty
             return float('inf') if self.optimization_type == OptimizationType.MINIMIZE else float('-inf')
 
         value = self.objective_fn(solution)
@@ -154,7 +177,7 @@ class SMTOptimizer(ABC):
         return new_value > old_value
 
     @abstractmethod
-    def optimize(self, max_iterations: int = 1000) -> SearchResult:
+    def optimize(self) -> SearchResult:
         """Run the optimization algorithm"""
         pass
 
@@ -162,18 +185,11 @@ class SMTOptimizer(ABC):
 class SMTAdaptiveMCMC(SMTOptimizer):
     """MCMC optimization with adaptive step sizes and SMT constraints"""
 
-    def __init__(self,
-                 objective_fn: Callable[[Dict[str, Number]], Number],
-                 search_space: SMTSearchSpace,
-                 initial_temp: float = 1.0,
-                 cooling_rate: float = 0.95,
-                 adaptation_rate: float = 0.1):
-        super().__init__(objective_fn, search_space)
-        self.temperature = initial_temp
-        self.cooling_rate = cooling_rate
-        self.adaptation_rate = adaptation_rate
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.temperature = self.config.initial_temp
         self.step_sizes = {name: (ub - lb) * 0.1
-                           for name, (lb, ub) in search_space.bounds.items()}
+                           for name, (lb, ub) in self.search_space.bounds.items()}
 
     def _propose_neighbor(self, current: Dict[str, Number]) -> Dict[str, Number]:
         """Generate neighbor with adaptive step sizes"""
@@ -182,7 +198,6 @@ class SMTAdaptiveMCMC(SMTOptimizer):
             var = self.search_space.variables[name]
             lb, ub = self.search_space.bounds[name]
 
-            # Generate perturbation
             step = self.step_sizes[name] * self.temperature
             if isinstance(var, z3.IntNumRef):
                 delta = random.randint(-int(step), int(step))
@@ -194,7 +209,6 @@ class SMTAdaptiveMCMC(SMTOptimizer):
 
             neighbor[name] = new_value
 
-        # If not feasible, try to find nearest feasible point
         if not self.search_space.is_feasible(neighbor):
             feasible = self.search_space.get_nearest_feasible(neighbor)
             if feasible is not None:
@@ -204,18 +218,15 @@ class SMTAdaptiveMCMC(SMTOptimizer):
 
     def _adapt_step_sizes(self, acceptance_rate: float):
         """Adapt step sizes based on acceptance rate"""
-        target_rate = 0.234  # Optimal acceptance rate for many-dimensional problems
-
+        target_rate = 0.234  # Optimal acceptance rate
         for name in self.step_sizes:
             if acceptance_rate > target_rate:
-                self.step_sizes[name] *= (1 + self.adaptation_rate)
+                self.step_sizes[name] *= (1 + self.config.adaptation_rate)
             else:
-                self.step_sizes[name] *= (1 - self.adaptation_rate)
+                self.step_sizes[name] *= (1 - self.config.adaptation_rate)
 
-    def optimize(self, max_iterations: int = 1000) -> SearchResult:
+    def optimize(self) -> SearchResult:
         start_time = time.time()
-
-        # Get initial feasible solution
         current = self.search_space.get_random_feasible()
         if current is None:
             raise ValueError("Could not find initial feasible solution")
@@ -226,44 +237,59 @@ class SMTAdaptiveMCMC(SMTOptimizer):
 
         history = [(current, current_value)]
         accepted = 0
+        consecutive_rejections = 0
+        converged = False
 
-        for i in range(max_iterations):
+        for iteration in range(self.config.max_iterations):
+            if time.time() - start_time > self.config.timeout_seconds:
+                break
+
             neighbor = self._propose_neighbor(current)
             neighbor_value = self._evaluate(neighbor)
 
-            # Accept based on Metropolis criterion
+            # Metropolis acceptance criterion
             delta = neighbor_value - current_value
             if delta < 0 or random.random() < math.exp(-delta / self.temperature):
                 current = neighbor
                 current_value = neighbor_value
                 accepted += 1
+                consecutive_rejections = 0
 
                 if self._is_better(current_value, self.best_value):
                     self.best_solution = current.copy()
                     self.best_value = current_value
+            else:
+                consecutive_rejections += 1
 
-            # Adapt step sizes every 100 iterations
-            if (i + 1) % 100 == 0:
+            # Convergence check
+            if consecutive_rejections > self.config.max_iterations // 10:
+                converged = True
+                break
+
+            # Adaptation and cooling
+            if (iteration + 1) % 100 == 0:
                 acceptance_rate = accepted / 100
                 self._adapt_step_sizes(acceptance_rate)
                 accepted = 0
+                self.temperature *= self.config.cooling_rate
 
             history.append((current, current_value))
-            self.temperature *= self.cooling_rate
+
+        final_value = self.best_value if self.optimization_type == OptimizationType.MINIMIZE else -self.best_value
 
         return SearchResult(
             best_solution=self.best_solution,
-            best_value=self.best_value if self.optimization_type == OptimizationType.MINIMIZE
-            else -self.best_value,
+            best_value=final_value,
             history=history,
-            iterations=max_iterations,
-            time_taken=time.time() - start_time
+            iterations=iteration + 1,
+            time_taken=time.time() - start_time,
+            converged=converged,
+            feasible=self.search_space.is_feasible(self.best_solution)
         )
 
 
 def example_usage():
     """Example usage with SMT constraints"""
-
     # Create solver and variables
     solver = z3.Solver()
     x = z3.Real('x')
@@ -273,7 +299,6 @@ def example_usage():
     solver.add(x + y <= 5)
     solver.add(x >= 0)
     solver.add(y >= 0)
-    # solver.add(2 * x - y >= 1)
 
     # Define search space
     search_space = SMTSearchSpace(
@@ -287,20 +312,32 @@ def example_usage():
         x_val, y_val = solution['x'], solution['y']
         return (x_val - 2) ** 2 + (y_val - 1) ** 2
 
+    # Configuration
+    config = OptimizationConfig(
+        max_iterations=1000,
+        timeout_seconds=10,
+        initial_temp=1.0,
+        cooling_rate=0.95,
+        adaptation_rate=0.1
+    )
+
     # Create and run optimizer
     optimizer = SMTAdaptiveMCMC(
         objective_fn=objective,
         search_space=search_space,
-        initial_temp=1.0
+        config=config,
+        optimization_type=OptimizationType.MINIMIZE
     )
-    print("start searching")
 
-    result = optimizer.optimize(max_iterations=20)
+    result = optimizer.optimize()
 
-    print("Optimization Results:")
+    print("\nOptimization Results:")
     print(f"Best solution: {result.best_solution}")
-    print(f"Best value: {result.best_value}")
+    print(f"Best value: {result.best_value:.6f}")
     print(f"Time taken: {result.time_taken:.2f} seconds")
+    print(f"Iterations: {result.iterations}")
+    print(f"Converged: {result.converged}")
+    print(f"Feasible: {result.feasible}")
 
 
 if __name__ == "__main__":
