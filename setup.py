@@ -17,7 +17,7 @@ URL = ' https://github.com/ZJU-Automated-Reasoning-Group/pyomt'
 EMAIL = 'rainoftime@gmail.com'
 AUTHOR = 'rainoftime'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '0.0.1'
+VERSION = '0.0.2'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
@@ -127,7 +127,6 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
-        'Programming Language :: Python :: 3.13',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy'
     ],
