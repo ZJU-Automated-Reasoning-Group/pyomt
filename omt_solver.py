@@ -9,13 +9,13 @@ from pyomt.omtbv.bv_opt_maxsat import bv_opt_with_maxsat
 from pyomt.omtbv.bv_opt_qsmt import bv_opt_with_qsmt
 from pyomt.utils.opt_parser import OMTParser
 
-logger = logging.getLogger(__name__)
-
 
 def solve_opt_file(filename: str, engine: str, solver_name: str):
     """Interface for solving single-objective
     Currently, the OMTParser will convert all objectives to the "maximal objecives"
     """
+    logger = logging.getLogger(__name__)  # Move logger here
+
     s = OMTParser()
     s.parse_with_z3(filename, is_file=True)
     # print(s.objectives)
@@ -33,26 +33,22 @@ def solve_opt_file(filename: str, engine: str, solver_name: str):
         # 2. use SMT-based linear search
         if search_type == 'ls':
             lin_res = bv_opt_with_linear_search(fml, obj, minimize=False, solver_name=solver_type)
-            print("lin res: ", lin_res)
-            print("----------------------------------")
+            # print("lin res: ", lin_res)
+            logger.info(f"Linear search result: {lin_res}")
         elif search_type == 'bs':
             # 2. use SMT-based binary search
             bin_res = bv_opt_with_binary_search(fml, obj, minimize=False, solver_name=solver_type)
-            print("bin res: ", bin_res)
-            print("----------------------------------")
+            logger.info(f"Binary search result: {bin_res}")
     elif engine == 'maxsat':
         # 3. use MaxSAT
         maxsat_res = bv_opt_with_maxsat(fml, obj, minimize=False, solver_name=solver_name)
-        print("maxsat res: ", maxsat_res)
-        print("----------------------------------")
+        logger.info(f"MaxSAT result: {maxsat_res}")
     elif engine == 'qsmt':
         # 4. use QSMT
         qsmt_res = bv_opt_with_qsmt(fml, obj, minimize=False, solver_name=solver_name)
-        print("qsmt res: ", qsmt_res)
-        print("----------------------------------")
+        logger.info(f"QSMT result: {qsmt_res}")
     else:
-        print("no res")
-        print("----------------------------------")
+        logger.warning("No result - invalid engine specified")
 
 
 def main():
@@ -74,7 +70,7 @@ def main():
                               help="Choose the weighted MaxSAT solver to use")
 
     iter_group = parser.add_argument_group('iter', 'Arguments for the iter-based engine')
-    iter_group.add_argument("--solver-iter", type=str, default="z3",
+    iter_group.add_argument("--solver-iter", type=str, default="z3-ls",
                             choices=[i + '-ls' for i in ["z3", "cvc5", "yices", "msat", "btor"]]
                                     + [i + '-bs' for i in ["z3", "cvc5", "yices", "msat", "btor"]],
                             help="Choose the quantifier-free SMT solver to use.")
@@ -86,7 +82,11 @@ def main():
 
     args = parser.parse_args()
 
-    logging.basicConfig(level=getattr(logging, args.log_level.upper(), None))
+    # Configure logging with format
+    logging.basicConfig(
+        level=getattr(logging, args.log_level.upper()),
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
 
     # Ensure the correct solver is used based on the selected engine
     if args.engine == "qsmt":
