@@ -7,7 +7,7 @@
 (assert (bvult x #x64))                     ; x < 100
 
 ; Optimization objective
-(maximize x)
+(minimize x)
 
 (check-sat)
 (get-model)

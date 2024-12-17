@@ -69,11 +69,13 @@ class MaxSATSolver:
             rc2.compute()
             return rc2.cost
         elif self.maxsat_engine == "OBV-BS":
+            print("Being OBV-BS")
             bits = []
             for i in reversed(range(len(self.soft))):
                 bits.append(self.soft[i][0])
             return obv_bs(self.hard, bits)
         else:
+            print("Being FM")
             fm = FM(self.wcnf, verbose=0)
             fm.compute()
             return fm.cost

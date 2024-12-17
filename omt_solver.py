@@ -47,6 +47,19 @@ def solve_opt_file(filename: str, engine: str, solver_name: str):
         # 4. use QSMT
         qsmt_res = bv_opt_with_qsmt(fml, obj, minimize=False, solver_name=solver_name)
         logger.info(f"QSMT result: {qsmt_res}")
+    elif engine == "z3py":
+        opt = z3.Optimize()
+        opt.from_file(filename=filename)
+        # Check and get result
+        if opt.check() == z3.sat:
+            print("Solution found:")
+            model = opt.model()
+            # Print all variables in the model
+            for decl in model:
+                print(f"{decl} = {model[decl]}")
+        else:
+            print("No solution")
+
     else:
         logger.warning("No result - invalid engine specified")
 
@@ -55,7 +68,7 @@ def main():
     parser = argparse.ArgumentParser(description="Solve OMT(BV) problems with different solvers.")
     parser.add_argument("filename", type=str, help="The filename of the problem to solve.")
     parser.add_argument("--engine", type=str, default="qsmt",
-                        choices=["qsmt", "maxsat", "iter"],
+                        choices=["qsmt", "maxsat", "iter", "z3py"],
                         help="Choose the engine to use")
 
     # Create argument groups for each engine
@@ -95,6 +108,8 @@ def main():
         solver = args.solver_maxsat
     elif args.engine == "iter":
         solver = args.solver_iter
+    elif args.engine == "z3py":
+        solver = "z3py"
     else:
         raise ValueError("Invalid engine specified")
 

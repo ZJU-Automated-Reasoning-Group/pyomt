@@ -10,6 +10,7 @@ that support quantified bit-vector formulas
 import z3
 from pyomt.utils.bin_solver import solve_with_bin_smt
 from pyomt.utils.pysmt_utils import ForAll, Exists
+from pyomt.utils.z3expr_utils import get_expr_vars
 
 
 def bv_opt_with_pysmt():
@@ -18,9 +19,19 @@ def bv_opt_with_pysmt():
 
 def bv_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_name: str):
     """ Quantified Satisfaction based OMT
-    TODO: why not allowing for using pySMT?...
+    # FIXME: it seems that we convert all the objectives to "maximize xx".
+       So, maybe we do not need this new API? But how can we know whether the original
+       objective is "minimize" or "maximize"?
     """
-    obj_misc = z3.BitVec(str(obj) + "m", obj.size())
+
+    objname = obj
+    all_vars = get_expr_vars(fml)
+    if obj not in all_vars:
+        # NOTICE: we create a new variable to represent obj (a term, e.g., x + y)
+        objname = z3.BitVec(str(obj), obj.sort().size())
+        fml = z3.And(fml, objname == obj)
+
+    obj_misc = z3.BitVec("m_" + str(objname), obj.size())
     new_fml = z3.substitute(fml, (obj, obj_misc))
     # TODO: bvule or < (distinguish between unsigned and signed...)
 
@@ -30,6 +41,7 @@ def bv_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_na
     else:
         qfml = z3.And(fml,
                       z3.ForAll([obj_misc], z3.Implies(new_fml, z3.ULE(obj_misc, obj))))
+    print(qfml)
     if z3.is_bv(obj):
         return solve_with_bin_smt("BV", qfml=qfml, obj_name=obj.sexpr(), solver_name=solver_name)
     else:

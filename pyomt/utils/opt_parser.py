@@ -29,8 +29,6 @@ class OMTParser:
         raise NotImplementedError
 
     def parse_with_z3(self, fml: str, is_file=False):
-        """
-        """
         s = z3.Optimize()
         if is_file:
             s.from_file(fml)
@@ -51,7 +49,8 @@ class OMTParser:
             # It seems that Z3 will convert each goal of the form "max f"  to "-f".
             # So, we just assign s.objectives() to self.objectives
             self.objective = s.objectives()[0]
-            print("XXXX")
+            # print("XXXX")
+            print("OBJ ", self.objective)
         elif self.to_max_obj:
             # if calling z3.simplify(-obj), the obj may look a bit strange
             obj = s.objectives()[0]
@@ -60,9 +59,7 @@ class OMTParser:
                 self.objective = obj.children()[0]
             else:
                 self.objective = -obj
-
-        if self.debug:
-            print("obj: ", self.objective)
+            print("OBJ ", self.objective)
 
 
 def demo_omt_parser():

@@ -42,7 +42,7 @@ class BitBlastOMTBVSolver:
         self.bool2id = {}  # map a Boolean variable to its internal ID in pysat
         self.vars = []
         self.verbose = 0
-        self.engine = "fm"
+        self.engine = "FM"
 
     def from_smt_formula(self, formula: z3.BoolRef):
         self.fml = formula
@@ -105,6 +105,7 @@ class BitBlastOMTBVSolver:
         NOTE: some algorithms may use bit-level binary search, such as Nadel's algorithm
         """
         assert z3.is_bv(obj)
+        # print(objname)
         objname = obj
 
         if obj not in self.vars:
@@ -115,7 +116,7 @@ class BitBlastOMTBVSolver:
                 if v not in self.vars:
                     raise Exception(str(obj), "contains a var not in the hard formula")
                     # return
-            # create a new variable to represent obj (a term, e.g., x + y)
+            # NOTICE: we create a new variable to represent obj (a term, e.g., x + y)
             objname = z3.BitVec(str(obj), objvars[0].sort().size())
             self.fml = z3.And(self.fml, objname == obj)
             self.vars.append(objname)
@@ -150,18 +151,17 @@ class BitBlastOMTBVSolver:
 
         logger.debug("Start solving weighted Max-SAT via pySAT...")
         maxsat_sol = MaxSATSolver(wcnf)
+        maxsat_sol.set_maxsat_engine(self.engine)
 
         if self.engine == "FM":
             # 1. Use an existing weighted MaxSAT solving algorithm
             start = time.time()
-            maxsat_sol.set_maxsat_engine("FM")
             cost = maxsat_sol.solve()
             logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - cost))
             logger.debug("FM MaxSAT time: {}".format(time.time() - start))
             return total_score - cost
         elif self.engine == "RC2":
             start = time.time()
-            maxsat_sol.set_maxsat_engine("RC2")
             cost = maxsat_sol.solve()
             logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - cost))
             logger.debug("FM MaxSAT time: {}".format(time.time() - start))
@@ -170,6 +170,7 @@ class BitBlastOMTBVSolver:
             # 2. Use binary-search-based MaxSAT solving (specialized for OMT(BV))
             start = time.time()
             assumption_lits = maxsat_sol.solve()
+            print(assumption_lits)
             assumption_lits.reverse()  # TODO: do we need this
             sum_score = 0
             if is_signed:

@@ -5,7 +5,9 @@ TODO. pysmt cannot handle bit-vector operations in a few formulas generaed by z3
 """
 import logging
 
-from pyomt.utils.config import g_enable_debug
+from pyomt.utils.z3expr_utils import get_expr_vars
+
+
 from pyomt.utils.pysmt_utils import *
 
 logger = logging.getLogger(__name__)
@@ -16,8 +18,14 @@ def bv_opt_with_linear_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
     """Linear Search based OMT using PySMT with bit-vectors.
     solver_name: the backend SMT solver for pySMT
     """
+    objname = z3_obj
+    all_vars = get_expr_vars(z3_fml)
+    if z3_obj not in all_vars:
+        # NOTICE: we create a new variable to represent obj (a term, e.g., x + y)
+        objname = z3.BitVec(str(z3_obj), z3_obj.sort().size())
+        z3_fml = z3.And(z3_fml, objname == z3_obj)
 
-    obj, fml = z3_to_pysmt(z3_fml, z3_obj)
+    obj, fml = z3_to_pysmt(z3_fml, objname)
     # print(obj)
     # print(fml)
     logger.info("Starting linear search optimization")
@@ -58,7 +66,15 @@ def bv_opt_with_linear_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
 def bv_opt_with_binary_search(z3_fml, z3_obj, minimize: bool, solver_name: str):
     """Binary Search based OMT using PySMT with bit-vectors."""
     # Convert Z3 expressions to PySMT
-    obj, fml = z3_to_pysmt(z3_fml, z3_obj)
+    objname = z3_obj
+    all_vars = get_expr_vars(z3_fml)
+    if z3_obj not in all_vars:
+        # NOTICE: we create a new variable to represent obj (a term, e.g., x + y)
+        objname = z3.BitVec(str(z3_obj), z3_obj.sort().size())
+        z3_fml = z3.And(z3_fml, objname == z3_obj)
+
+    obj, fml = z3_to_pysmt(z3_fml, objname)
+
     # print(obj)
     # print(fml)
 
@@ -195,7 +211,7 @@ def init_logger(log_level: str = 'INFO') -> None:
 
 if __name__ == '__main__':
     # Set log level based on debug flag
-    log_level = 'DEBUG' if g_enable_debug else 'INFO'
+    log_level = 'DEBUG'
 
     # Initialize logger
     init_logger(log_level)
