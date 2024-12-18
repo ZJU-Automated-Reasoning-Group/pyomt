@@ -9,7 +9,7 @@ iter_methods=("ls" "bs")
 maxsat_solvers=("FM" "RC2" "OBV-BS")
 qsmt_solvers=("z3" "cvc5" "yices" "msat" "bitwuzla" "q3b")
 
-configs=()
+configs=("z3py")
 
 for i in "${iter_solvers[@]}"; do
     for j in "${iter_methods[@]}"; do
