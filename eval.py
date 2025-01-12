@@ -53,7 +53,7 @@ def save_results_to_csv(results, csv_filename):
                 'file': result['file'],
                 'engine': result['engine'],
                 'solver': result['solver'],
-                'time': result['time'], 
+                'time': result['time'],
                 'stdout': result['stdout'],
                 'stderr': result['stderr']
             })
@@ -93,18 +93,18 @@ def main(directory, config, csv_filename, timeout):
 
     for smt_file in tqdm(smt_files, desc="processing files"):
         for args in args_list:
-            processed_result = {'file': smt_file, 
-                                'engine': args.split()[0], 
-                                'solver': args.split()[-1], 
-                                'time': 0, 
+            processed_result = {'file': smt_file,
+                                'engine': args.split()[0],
+                                'solver': args.split()[-1],
+                                'time': 0,
                                 'stdout': '',
                                 'stderr': ''
                                 }
             if processed_result['engine'] == 'z3py':
                 solve_args = ['--engine=z3py']
             else:
-                solve_args = ['--engine=' + processed_result['engine'], 
-                            '--solver-'+ processed_result['engine'] + '=' + processed_result['solver']]
+                solve_args = ['--engine=' + processed_result['engine'],
+                              '--solver-' + processed_result['engine'] + '=' + processed_result['solver']]
             start = time.time()
             run_result = solve_file_with_omt_solver(smt_file, solve_args, timeout)
             processed_result['time'] = time.time() - start

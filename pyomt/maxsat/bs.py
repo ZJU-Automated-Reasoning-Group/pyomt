@@ -49,3 +49,43 @@ def obv_bs(clauses, literals):
                     result.append(-lit)
     # print(result)
     return result
+
+
+
+def obv_bs_anytime(clauses, literals):
+    """
+    An anytime version of the binary search algorithm of bit-vector optimization.
+
+    The algorithm will return the best solution found so far when it is interrupted.
+    Args:
+        clauses: the given constraints
+        literals: literals listed in priority
+    
+    Strategies
+    1. Set a time limit for the algorithm, and return the best solution found so far when the time is up.
+    2. Set a limit of the number of conflicts in each SAT call (when deciding a bit, say, b3); set the bit b3 to 0 if the limit is reached and continue the search for b2, b1, etc.
+    """
+    # FIXME: IMPLEMENT THIS FUNCTION following the strategies above
+    result = []
+    s = Solver(bootstrap_with=clauses)
+    if s.solve():
+        m = s.get_model()
+    else:
+        print('UNSAT')
+        return result
+    l = len(m)
+    for lit in literals:
+        if lit > l:
+            result.append(lit)
+        else:
+            if m[lit - 1] > 0:
+                result.append(lit)
+            else:
+                result.append(lit)
+                if s.solve(assumptions=result):
+                    m = s.get_model()
+                else:
+                    result.pop()
+                    result.append(-lit)
+    return result
+

@@ -72,21 +72,57 @@ def main():
                         help="Choose the engine to use")
 
     # Create argument groups for each engine
+
+    # for single-objective optimization
     qsmt_group = parser.add_argument_group('qsmt', 'Arguments for the QSMT-based engine')
     qsmt_group.add_argument("--solver-qsmt", type=str, default="z3",
                             choices=["z3", "cvc5", "yices", "msat", "bitwuzla", "q3b"],
                             help="Choose the quantified SMT solver to use.")
 
+    # for single-objective optimization
     maxsat_group = parser.add_argument_group('maxsat', 'Arguments for the MaxSAT-based engine')
     maxsat_group.add_argument("--solver-maxsat", type=str, default="FM",
                               choices=["FM", "RC2", "OBV-BS"],
                               help="Choose the weighted MaxSAT solver to use")
 
-    iter_group = parser.add_argument_group('iter', 'Arguments for the iter-based engine')
+    # for single-objective optimization
+    iter_group = parser.add_argument_group('iter', 'Arguments for the iterative search-based engine')
     iter_group.add_argument("--solver-iter", type=str, default="z3-ls",
                             choices=[i + '-ls' for i in ["z3", "cvc5", "yices", "msat", "btor"]]
                                     + [i + '-bs' for i in ["z3", "cvc5", "yices", "msat", "btor"]],
-                            help="Choose the quantifier-free SMT solver to use.")
+                            help="Choose the quantifier-free SMT solver to use. ls - linear search,"
+                                 " bs - binary search")
+
+    # Optimization General Options
+    opt_general_group = parser.add_argument_group('Optimization General Options')
+
+    # Set the priority of objectives in multi-objective optimization
+    opt_general_group.add_argument("--opt-priority", type=str, default="box",
+                                   choices=["box", "lex", "par"],
+                                   help="Multi-objective combination method: "
+                                        "box - boxed/multi-independent optimization (default), "
+                                        "lex - lexicographic optimization, follows input order, "
+                                        "par - pareto optimization")
+
+    # Optimization Boxed-Search Options
+    opt_box_group = parser.add_argument_group('Optimization Boxed-Search Options')
+
+    opt_box_group.add_argument("--opt-box-engine", type=str, default="seq",
+                               choices=["seq", "compact", "par"],
+                               help="Optimize objectives in sequence (default: seq)."
+                                    "compact - compact optimization (OOPSLA'21), "
+                                    "par - parallel optimization")
+
+    opt_box_group.add_argument("--opt-box-shuffle", action="store_false",
+                               help="Optimize objectives in random order (default: false)")
+
+    # Optimization Theory Options (mainly for QF_BV and QF_LIA)
+    opt_theory_group = parser.add_argument_group('Optimization Theory Options')
+    opt_theory_group.add_argument("--opt-theory-bv-engine", type=str, default="qsmt",
+                                  choices=["qsmt", "maxsat", "iter"])
+
+    opt_theory_group.add_argument("--opt-theory-int-engine", type=str, default="qsmt",
+                                  choices=["qsmt", "iter"])
 
     parser.add_argument("--seed", type=int, default=1, help="Random seed.")
     parser.add_argument("--log-level", type=str, default="INFO",

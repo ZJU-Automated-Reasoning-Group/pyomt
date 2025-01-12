@@ -1,3 +1,4 @@
+.vscode
 docs/build
 pyomt.egg-info/
 tmp_files/*

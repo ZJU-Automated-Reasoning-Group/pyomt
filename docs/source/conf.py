@@ -3,7 +3,7 @@
 # -- Project information -----------------------------------------------------
 
 project = "pyomt"
-copyright = "2024, rainoftime"
+copyright = "2025, rainoftime"
 author = "rainoftime"
 
 # The full version, including alpha/beta/rc tags
