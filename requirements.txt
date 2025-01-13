@@ -5,3 +5,4 @@ Cython~=0.29.34
 python-sat==0.1.8.dev1
 tqdm~=4.65.0
 meson>=0.64
+pytest==8.3.4
