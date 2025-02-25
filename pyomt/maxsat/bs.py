@@ -52,7 +52,7 @@ def obv_bs(clauses, literals):
 
 
 
-def obv_bs_anytime(clauses, literals):
+def obv_bs_anytime(clauses, literals, time_limit: float = 60.0, conflict_limit: int = 1000):
     """
     An anytime version of the binary search algorithm of bit-vector optimization.
 
@@ -60,32 +60,71 @@ def obv_bs_anytime(clauses, literals):
     Args:
         clauses: the given constraints
         literals: literals listed in priority
+        time_limit: maximum time in seconds (default: 60s)
+        conflict_limit: maximum number of conflicts per SAT call (default: 1000)
     
-    Strategies
-    1. Set a time limit for the algorithm, and return the best solution found so far when the time is up.
-    2. Set a limit of the number of conflicts in each SAT call (when deciding a bit, say, b3); set the bit b3 to 0 if the limit is reached and continue the search for b2, b1, etc.
+    Returns:
+        best_result: the best assignment found within the time limit
     """
-    # FIXME: IMPLEMENT THIS FUNCTION following the strategies above
-    result = []
+    import time
+    start_time = time.time()
+    
+    # Initialize solver with conflict limit
     s = Solver(bootstrap_with=clauses)
-    if s.solve():
-        m = s.get_model()
-    else:
+    s.conf_budget(conflict_limit)
+    
+    # Try to get initial solution
+    if not s.solve_limited():
         print('UNSAT')
-        return result
+        return []
+        
+    best_result = []  # Store best result found so far
+    current_result = []
+    m = s.get_model()
     l = len(m)
-    for lit in literals:
-        if lit > l:
-            result.append(lit)
-        else:
-            if m[lit - 1] > 0:
-                result.append(lit)
+    
+    try:
+        for lit in literals:
+            # Check time limit
+            if time.time() - start_time > time_limit:
+                print('Time limit reached')
+                return best_result if best_result else current_result
+                
+            if lit > l:
+                # If literal not in model, try setting it to 1 first
+                current_result.append(lit)
             else:
-                result.append(lit)
-                if s.solve(assumptions=result):
+                # Try setting current bit to 1 first
+                current_result.append(lit)
+                
+                # Set new conflict budget for this SAT call
+                s.conf_budget(conflict_limit)
+                
+                if s.solve_limited(assumptions=current_result):
                     m = s.get_model()
                 else:
-                    result.pop()
-                    result.append(-lit)
-    return result
+                    # If UNSAT or conflict limit reached, try with 0
+                    current_result.pop()
+                    current_result.append(-lit)
+                    
+                    # Try one more time with opposite value
+                    s.conf_budget(conflict_limit)
+                    if not s.solve_limited(assumptions=current_result):
+                        # If both values fail, backtrack to previous best result
+                        current_result.pop()
+                        if best_result:
+                            return best_result
+                        continue
+                    m = s.get_model()
+            
+            # Update best result if current solution is valid
+            if s.solve_limited(assumptions=current_result):
+                best_result = current_result.copy()
+                
+    except KeyboardInterrupt:
+        # Handle external interruption
+        print('Interrupted - returning best result found')
+        return best_result if best_result else current_result
+        
+    return best_result if best_result else current_result
 

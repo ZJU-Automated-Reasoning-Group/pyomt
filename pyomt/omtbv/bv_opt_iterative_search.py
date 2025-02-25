@@ -1,6 +1,6 @@
 """
 TODO. pysmt cannot handle bit-vector operations in a few formulas generaed by z3.
- E.g., it may haave a more strict restriction on
+ E.g., it may have a more strict restriction on
   the number of arguments to certain bit-vector options
 """
 import logging

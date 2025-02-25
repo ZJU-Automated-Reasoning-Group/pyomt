@@ -1,3 +1,6 @@
+"""
+Cmd line interface for solving OMT(BV) problems with different solvers.
+"""
 import argparse
 import logging
 

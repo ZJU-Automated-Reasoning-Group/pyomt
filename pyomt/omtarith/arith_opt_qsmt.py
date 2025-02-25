@@ -1,3 +1,4 @@
+"""Reducing OMT to QSMT"""
 import z3
 from pyomt.utils.bin_solver import solve_with_bin_smt
 from pyomt.utils.pysmt_utils import ForAll, Exists

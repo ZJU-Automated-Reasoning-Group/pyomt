@@ -1,3 +1,8 @@
+"""
+For quickly comparing the performance of different APIs
+e.g., get_expr_vars_z3default, get_expr_vars
+"""
+
 import os
 import statistics
 import time
