@@ -14,10 +14,8 @@ You can install pyomt using pip:
 
 Requirements:
 
-* Python >= 3.6.0
-* PySMT == 0.9.6
-* z3-solver == 4.8.10
-* Other dependencies will be installed automatically
+* Python >= 3.9
+* See `requirements.txt` in the repository root
 
 Quick Start
 -----------
@@ -26,16 +24,15 @@ Here's a simple example of using pyomt:
 
 .. code-block:: python
 
-    from pysmt.shortcuts import Symbol, And, BV
-    from pyomt.omtbv import BVOptimizer
+    from pysmt.shortcuts import Symbol, And, BV, BVUGT, BVULT
+    from pysmt.typing import BVType
+    from pyomt.omtbv.bv_opt_maxsat import BVOptMaxSAT
 
-    # Create variables and constraints
     x = Symbol('x', BVType(8))
     y = Symbol('y', BVType(8))
     constraints = And(BVULT(x, BV(100, 8)), BVUGT(y, BV(50, 8)))
 
-    # Create optimizer and solve
-    optimizer = BVOptimizer()
+    optimizer = BVOptMaxSAT()
     optimizer.add_assertion(constraints)
     optimizer.maximize(x)
 
@@ -54,9 +51,10 @@ Modules
 -------
 
 * **pyomt.maxsat**: MaxSAT-based optimization algorithms
+* **pyomt.maxsmt**: MaxSMT optimization
 * **pyomt.omtbv**: Bit-vector optimization
 * **pyomt.omtarith**: Arithmetic optimization
-* **pyomt.utils**: Utility functions and helpers
+* **pyomt.utils**: Utilities and helpers
 
 License
 -------
@@ -75,7 +73,14 @@ API Reference
    :maxdepth: 2
    :caption: Contents:
 
+   maxsat
+   omtbv
+   omtarith
+   api/pyomt
    api/maxsat
+   api/maxsmt
+   api/msa
+   api/cli
    api/omtbv
    api/omtarith
    api/utils

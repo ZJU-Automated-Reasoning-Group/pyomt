@@ -1,2 +1,5 @@
-sphinx-rtd-theme
-sphinx
+sphinx>=7
+sphinx-rtd-theme>=2
+furo>=2024.1.29
+docutils>=0.18
+Jinja2>=3

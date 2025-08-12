@@ -1,43 +1,22 @@
 Bit-Vector Optimization Module
-==========================
+==============================
 
 The bit-vector optimization module provides specialized solvers for bit-vector optimization problems in SMT.
 
-Classes
--------
+API Reference
+-------------
 
-BVOptimizer
-~~~~~~~~~~
+.. autosummary::
+   :toctree: api
+   :recursive:
 
-Main class for bit-vector optimization.
-
-.. code-block:: python
-
-    from pyomt.omtbv import BVOptimizer
-
-Methods:
-
-* ``add_assertion(formula)``: Add a constraint to the optimization problem
-* ``maximize(term)``: Set the objective function to maximize
-* ``minimize(term)``: Set the objective function to minimize
-* ``solve()``: Solve the optimization problem
-
-
-BitBlastOMTSolver
-~~~~~~~~~~~~~~~~
-
-Implements bit-blasting based optimization techniques.
-
-.. code-block:: python
-
-    from pyomt.omtbv import BitBlastOMTSolver
-
-
-BVOptMaxSAT
-~~~~~~~~~~
-
-MaxSAT-based approach for bit-vector optimization.
-
-.. code-block:: python
-
-    from pyomt.omtbv import BVOptMaxSAT
+   pyomt.omtbv
+   pyomt.omtbv.bit_blast_omt_solver
+   pyomt.omtbv.bv_opt_utils
+   pyomt.omtbv.bv_opt_iterative_search
+   pyomt.omtbv.bv_opt_maxsat
+   pyomt.omtbv.bv_opt_qsmt
+   pyomt.omtbv.boxed
+   pyomt.omtbv.boxed.bv_boxed_seq
+   pyomt.omtbv.boxed.bv_boxed_compact
+   pyomt.omtbv.boxed.bv_boxed_obj_divide
