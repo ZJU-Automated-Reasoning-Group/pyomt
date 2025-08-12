@@ -8,13 +8,14 @@ import click
 import logging
 import time
 from pathlib import Path
+from typing import Optional
 
 from pysat.formula import WCNF
 from pyomt.maxsat.maxsat_solver import MaxSATSolver, MaxSATEngine
 
 logger = logging.getLogger("pyomt.cli.maxsat")
 
-def setup_logging(log_level):
+def setup_logging(log_level: str) -> None:
     """Configure logging with the specified level"""
     logging.basicConfig(
         level=getattr(logging, log_level.upper()),
@@ -24,7 +25,7 @@ def setup_logging(log_level):
 @click.group()
 @click.option('--log-level', type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], 
               case_sensitive=False), default='INFO', help='Set logging level')
-def maxsat_cli(log_level):
+def maxsat_cli(log_level: str) -> None:
     """PyOMT MaxSAT Solver - Command line interface for MaxSAT solving"""
     setup_logging(log_level)
 
@@ -36,7 +37,7 @@ def maxsat_cli(log_level):
               help='Solving timeout in seconds (default: 1 hour)')
 @click.option('--output', type=click.Path(), default=None,
               help='Output file for the solution')
-def solve(filename, engine, timeout, output):
+def solve(filename: str, engine: str, timeout: float, output: Optional[str]) -> None:
     """Solve a MaxSAT problem from a WCNF file"""
     try:
         # Load WCNF formula
@@ -77,7 +78,7 @@ def solve(filename, engine, timeout, output):
 
 @maxsat_cli.command()
 @click.argument('filename', type=click.Path(exists=True))
-def info(filename):
+def info(filename: str) -> None:
     """Display information about a WCNF file"""
     try:
         wcnf = WCNF(from_file=filename)

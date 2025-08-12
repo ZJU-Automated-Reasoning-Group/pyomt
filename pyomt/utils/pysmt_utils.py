@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 import z3
 from pysmt.shortcuts import BVULT, BVUGT
 from pysmt.shortcuts import Symbol, And, BV, BVUGE, BVULE, Solver, ForAll, Exists, qelim
@@ -9,8 +9,8 @@ from pyomt.utils.z3expr_utils import get_expr_vars
 # NOTE: both pysmt and z3 have a class "Solver"
 
 
-def z3_to_pysmt_vars(z3vars: [z3.ExprRef]):
-    res = []
+def z3_to_pysmt_vars(z3vars: List[z3.ExprRef]):
+    res: List = []
     for v in z3vars:
         if z3.is_int(v):
             res.append(Symbol(v.decl().name(), INT))

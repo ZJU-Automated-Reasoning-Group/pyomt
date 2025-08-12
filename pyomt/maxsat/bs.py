@@ -9,19 +9,20 @@ Notice that, in this domain, this corresponds to a binary search over the space 
 
 NOTE: we assume that each element in self.soft is a unary clause, i.e., self.soft is [[l1], [l2], ...]
 """
-from typing import List
+from typing import List, Sequence
 from pysat.solvers import Solver
 
 
-def obv_bs(clauses, literals):
+def obv_bs(clauses: Sequence[Sequence[int]], literals: Sequence[int]) -> List[int]:
     """
-    This is a binary search algorithm of bit-vector optimization.
+    Binary search algorithm for bit-vector optimization.
+
     Args:
-        clauses: the given constraints
-        literals: literals listed in priority
+        clauses: CNF clauses over integers representing literals
+        literals: literals listed in priority (most significant first)
 
-    Returns: the maximum assignment of literals
-
+    Returns:
+        The maximum assignment of literals as a list of signed integers
     """
     result = []
     # sat_oracle = Solver(name=sat_engine_name, bootstrap_with=clauses, use_timer=True)
@@ -52,19 +53,26 @@ def obv_bs(clauses, literals):
 
 
 
-def obv_bs_anytime(clauses, literals, time_limit: float = 60.0, conflict_limit: int = 1000):
+def obv_bs_anytime(
+    clauses: Sequence[Sequence[int]],
+    literals: Sequence[int],
+    time_limit: float = 60.0,
+    conflict_limit: int = 1000,
+) -> List[int]:
     """
-    An anytime version of the binary search algorithm of bit-vector optimization.
+    Anytime version of the binary search algorithm for bit-vector optimization.
 
-    The algorithm will return the best solution found so far when it is interrupted.
+    The algorithm returns the best solution found so far when interrupted or when
+    the time limit is reached.
+
     Args:
-        clauses: the given constraints
-        literals: literals listed in priority
-        time_limit: maximum time in seconds (default: 60s)
-        conflict_limit: maximum number of conflicts per SAT call (default: 1000)
-    
+        clauses: CNF clauses over integers representing literals
+        literals: literals listed in priority (most significant first)
+        time_limit: maximum wall time in seconds
+        conflict_limit: maximum number of conflicts per SAT call
+
     Returns:
-        best_result: the best assignment found within the time limit
+        The best assignment found within the time/conflict limits
     """
     import time
     start_time = time.time()

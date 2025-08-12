@@ -5,7 +5,7 @@ Provides the abstract base class for MaxSMT solvers and common utility functions
 """
 
 import logging
-from typing import List, Tuple, Optional, Set, Any, Union
+from typing import List, Tuple, Optional, Set, Any
 from enum import Enum
 
 import z3

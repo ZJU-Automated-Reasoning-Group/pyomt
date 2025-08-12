@@ -1,15 +1,17 @@
+from typing import List
+
 from z3 import *
 from z3.z3util import get_vars
 
 
-def get_expr_vars_z3default(exp):
+def get_expr_vars_z3default(exp: ExprRef) -> List[ExprRef]:
     return get_vars(exp)
 
 
-def get_expr_vars(exp):
+def get_expr_vars(exp: ExprRef) -> List[ExprRef]:
     try:
-        syms = set()
-        stack = [exp]
+        syms: set[ExprRef] = set()
+        stack: List[ExprRef] = [exp]
 
         while stack:
             e = stack.pop()
@@ -22,6 +24,6 @@ def get_expr_vars(exp):
         return list(syms)
     except Z3Exception as ex:
         print(ex)
-        return False
+        return []
 
 

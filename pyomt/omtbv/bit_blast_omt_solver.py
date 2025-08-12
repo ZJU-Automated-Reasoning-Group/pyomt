@@ -36,7 +36,7 @@ class BitBlastOMTBVSolver:
     NOTE: the exact MaxSAT solver is in pyomt.maxsat.maxsat_solver.py
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.fml = None
         self.bv2bool = {}  # map a bit-vector variable to a list of Boolean variables [ordered by bit?]
         self.bool2id = {}  # map a Boolean variable to its internal ID in pysat
@@ -44,15 +44,15 @@ class BitBlastOMTBVSolver:
         self.verbose = 0
         self.engine = "FM"
 
-    def from_smt_formula(self, formula: z3.BoolRef):
+    def from_smt_formula(self, formula: z3.BoolRef) -> None:
         self.fml = formula
         # elf.vars = get_vars(self.fml)
         self.vars = get_expr_vars(self.fml)
 
-    def set_engine(self, solver_name: str):
+    def set_engine(self, solver_name: str) -> None:
         self.engine = solver_name
 
-    def bit_blast(self):
+    def bit_blast(self) -> list[list[int]]:
         """
         The bit_blast function converts a bit-vector formula to Boolean logic.
         It sets the `bv2bool` and `bool2id` class attributes as the mapping from BV
@@ -80,7 +80,7 @@ class BitBlastOMTBVSolver:
         # print("  pysat clauses: ", clauses_numric)
         return clauses_numeric
 
-    def check_sat(self):
+    def check_sat(self) -> None:
         """
         Checks satisfiability of the SMT-LIB 2.0 formula stored in the `fml` attribute
         by converting it to CNF and using a SAT solver. Returns a boolean indicating the
@@ -99,7 +99,7 @@ class BitBlastOMTBVSolver:
         except Exception as ex:
             print(ex)
 
-    def maximize_with_maxsat(self, obj: z3.ExprRef, is_signed=False):
+    def maximize_with_maxsat(self, obj: z3.ExprRef, is_signed: bool = False) -> int | None:
         """
         Weighted-MaxSAT based OMT(BV)
         NOTE: some algorithms may use bit-level binary search, such as Nadel's algorithm
@@ -156,16 +156,20 @@ class BitBlastOMTBVSolver:
         if self.engine == "FM":
             # 1. Use an existing weighted MaxSAT solving algorithm
             start = time.time()
-            cost = maxsat_sol.solve()
-            logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - cost))
+            res = maxsat_sol.solve()
+            if res.status == "error" or res.status == "unsat":
+                return None
+            logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - res.cost))
             logger.debug("FM MaxSAT time: {}".format(time.time() - start))
-            return total_score - cost
+            return total_score - int(res.cost)
         elif self.engine == "RC2":
             start = time.time()
-            cost = maxsat_sol.solve()
-            logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - cost))
+            res = maxsat_sol.solve()
+            if res.status == "error" or res.status == "unsat":
+                return None
+            logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - res.cost))
             logger.debug("FM MaxSAT time: {}".format(time.time() - start))
-            return total_score - cost
+            return total_score - int(res.cost)
         elif self.engine == "OBV-BS":
             # 2. Use binary-search-based MaxSAT solving (specialized for OMT(BV))
             start = time.time()
@@ -191,7 +195,9 @@ class BitBlastOMTBVSolver:
         else:
             start = time.time()
             maxsat_sol.set_maxsat_engine("FM")
-            cost = maxsat_sol.solve()
-            logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - cost))
+            res = maxsat_sol.solve()
+            if res.status == "error" or res.status == "unsat":
+                return None
+            logger.debug("maximum of {0}: {1} ".format(obj_str, total_score - res.cost))
             logger.debug("FM MaxSAT time: {}".format(time.time() - start))
-            return total_score - cost
+            return total_score - int(res.cost)

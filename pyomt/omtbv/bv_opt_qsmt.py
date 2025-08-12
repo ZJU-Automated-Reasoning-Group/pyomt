@@ -8,6 +8,7 @@ that support quantified bit-vector formulas
 """
 
 import z3
+from typing import Any
 from pyomt.utils.bin_solver import solve_with_bin_smt
 from pyomt.utils.pysmt_utils import ForAll, Exists
 from pyomt.utils.z3expr_utils import get_expr_vars
@@ -17,7 +18,7 @@ def bv_opt_with_pysmt():
     raise NotImplementedError
 
 
-def bv_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_name: str):
+def bv_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_name: str) -> str:
     """ Quantified Satisfaction based OMT
     # FIXME: it seems that we convert all the objectives to "maximize xx".
        So, maybe we do not need this new API? But how can we know whether the original
@@ -48,7 +49,7 @@ def bv_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_na
         return solve_with_bin_smt("ALL", qfml=qfml, obj_name=obj.sexpr(), solver_name=solver_name)
 
 
-def demo_qsmt():
+def demo_qsmt() -> None:
     import time
     x, y, z = z3.BitVecs("x y z", 16)
     fml = z3.And(z3.UGT(y, 0), z3.ULT(y, 10))

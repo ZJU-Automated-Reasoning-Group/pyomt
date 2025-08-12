@@ -1,10 +1,12 @@
 """Reducing OMT to QSMT"""
+from typing import Any
+
 import z3
 from pyomt.utils.bin_solver import solve_with_bin_smt
 from pyomt.utils.pysmt_utils import ForAll, Exists
 
 
-def arith_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_name: str):
+def arith_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_name: str) -> str:
     """ Quantified Satisfaction based OMT
     """
     is_int = True
@@ -37,7 +39,7 @@ def arith_opt_with_qsmt(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver
                                   solver_name=solver_name)
 
 
-def demo_qsmt():
+def demo_qsmt() -> None:
     import time
     x, y, z = z3.Reals("x y z")
     fml = z3.And(y >= 0, y < 10)

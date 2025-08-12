@@ -28,7 +28,7 @@ def solve_file_with_omt_solver(file_path, args, timeout):
     result = {'file': file_path, 'stdout': '', 'stderr': ''}
     try:
         process = subprocess.run(
-            ['python3', 'omt_solver.py', file_path] + args,
+            ['python3', '-m', 'pyomt.cli.pyomt', 'solve', file_path] + args,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=timeout,

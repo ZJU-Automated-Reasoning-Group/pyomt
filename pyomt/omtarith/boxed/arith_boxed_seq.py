@@ -12,10 +12,12 @@ from pyomt.omtarith.arith_opt_qsmt import arith_opt_with_qsmt
 
 logger = logging.getLogger(__name__)
 
-def solve_arith_boxed_sequential(formula: z3.BoolRef,
-                               objectives: List[z3.ExprRef],
-                               minimize: bool = False,
-                               solver_name: str = "z3") -> List[Optional[Union[int, float]]]:
+def solve_arith_boxed_sequential(
+    formula: z3.BoolRef,
+    objectives: List[z3.ExprRef],
+    minimize: bool = False,
+    solver_name: str = "z3",
+) -> List[Optional[Union[int, float]]]:
     """
     Solve multiple arithmetic objectives sequentially using boxed optimization strategy.
     
@@ -74,7 +76,7 @@ def solve_arith_boxed_sequential(formula: z3.BoolRef,
             
     return results
 
-def demo():
+def demo() -> None:
     """Demo usage of sequential arithmetic optimization"""
     # Create variables
     x = z3.Real('x')

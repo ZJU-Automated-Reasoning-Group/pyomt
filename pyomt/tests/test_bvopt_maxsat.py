@@ -83,3 +83,7 @@ class TestBVOptMaxSAT:
         except ValueError:
             # Both returning None or raising ValueError are acceptable
             pass
+
+
+if __name__ == "__main__":
+    pytest.main()

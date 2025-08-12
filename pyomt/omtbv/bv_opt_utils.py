@@ -1,8 +1,9 @@
 import os
 import subprocess
+from typing import List, Optional, Tuple
 
 
-def cnt(result):  # 将结果转化为整数
+def cnt(result: List[int]) -> int:
     result.reverse()
     sums = 0
     for i in range(len(result)):
@@ -11,8 +12,8 @@ def cnt(result):  # 将结果转化为整数
     return sums
 
 
-def list_to_int(result, obj_type):
-    res = []
+def list_to_int(result: List[List[int]], obj_type: List[int]) -> List[int]:
+    res: List[int] = []
     for i in range(len(result)):
         score = cnt(result[i])
         if obj_type[i] == 1:
@@ -23,14 +24,14 @@ def list_to_int(result, obj_type):
     return res
 
 
-def assum_in_m(assum, m):
+def assum_in_m(assum: List[int], m: List[int]) -> bool:
     for i in assum:
         if i not in m:
             return False
     return True
 
 
-def cnf_from_z3(constraint_file):
+def cnf_from_z3(constraint_file: str) -> Optional[str]:
     path = os.getcwd()
     path = os.path.dirname(os.path.dirname(os.path.dirname(path)))
     try:
@@ -46,14 +47,14 @@ def cnf_from_z3(constraint_file):
         return None
 
 
-def read_cnf(data):
+def read_cnf(data: str) -> Tuple[List[List[int]], List[List[int]], List[int]]:
     lines = data.splitlines()
 
-    clauses = []
-    obj_type = []  # 0为最小化，1为最大化
-    soft = []
+    clauses: List[List[int]] = []
+    obj_type: List[int] = []  # 0为最小化，1为最大化
+    soft: List[List[int]] = []
     con = '0'
-    soft_temp = []
+    soft_temp: List[int] = []
 
     # 处理首行获得子句数量
     l = lines[0].strip()
@@ -69,7 +70,7 @@ def read_cnf(data):
         i += 1
 
     j = i
-    dic = {}
+    dic: dict[int, str] = {}
     mi = 10 ** 10
     while lines[j].startswith('c'):
         if len(lines[j].split()) < 6:
@@ -108,11 +109,11 @@ def read_cnf(data):
     return clauses, soft, obj_type
 
 
-def res_z3_trans(r_z3):
+def res_z3_trans(r_z3: str) -> List[int]:
     lines = r_z3.splitlines()
     i = 2
     l = len(lines)
-    r = []
+    r: List[int] = []
     while i < l:
         parts = lines[i].split()
         if len(parts) > 1:

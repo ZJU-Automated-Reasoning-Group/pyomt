@@ -27,8 +27,11 @@ REQUIRED = [
     'Cython~=0.29.34',
     'python-sat==0.1.8.dev1',
     'tqdm~=4.65.0',
-    'meson>=0.64'
+    'meson>=0.64',
+    'click>=8.1.0',
+    'setuptools'
 ]
+
 
 # The rest you shouldn't have to touch too much :)
 # ------------------------------------------------
@@ -113,6 +116,9 @@ setup(
     install_requires=REQUIRED,
     # extras_require=EXTRAS,
     include_package_data=True,
+    package_data={
+        'pyomt': ['py.typed'],
+    },
     license='MIT',
     classifiers=[
         # Trove classifiers

@@ -8,13 +8,17 @@ import logging
 from pyomt.utils.z3expr_utils import get_expr_vars
 
 
-from pyomt.utils.pysmt_utils import *
+from pyomt.utils.pysmt_utils import *  # noqa: F401,F403 re-exported utilities used by module
 
 logger = logging.getLogger(__name__)
 
 
-def bv_opt_with_linear_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
-                              minimize: bool, solver_name: str):
+def bv_opt_with_linear_search(
+    z3_fml: z3.ExprRef,
+    z3_obj: z3.ExprRef,
+    minimize: bool,
+    solver_name: str,
+) -> str:
     """Linear Search based OMT using PySMT with bit-vectors.
     solver_name: the backend SMT solver for pySMT
     """
@@ -63,7 +67,12 @@ def bv_opt_with_linear_search(z3_fml: z3.ExprRef, z3_obj: z3.ExprRef,
             return result
 
 
-def bv_opt_with_binary_search(z3_fml, z3_obj, minimize: bool, solver_name: str):
+def bv_opt_with_binary_search(
+    z3_fml: z3.ExprRef,
+    z3_obj: z3.ExprRef,
+    minimize: bool,
+    solver_name: str,
+):
     """Binary Search based OMT using PySMT with bit-vectors."""
     # Convert Z3 expressions to PySMT
     objname = z3_obj
@@ -160,7 +169,7 @@ def bv_opt_with_binary_search(z3_fml, z3_obj, minimize: bool, solver_name: str):
         return min_value
 
 
-def demo_iterative():
+def demo_iterative() -> None:
     import time
     x, y, z = z3.BitVecs("x y z", 16)
     fml = z3.And(z3.UGT(y, 3), z3.ULT(y, 10))

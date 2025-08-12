@@ -1,60 +1,58 @@
-# A library for OMT(BV) Solving
+# PyOMT — Optimization Modulo Theories
 
+PyOMT provides engines for solving Optimization Modulo Theories (OMT) problems, focusing on bit-vector objectives.
 
-Optimization Modulo Theory (OMT) extends Satisfiability Modulo Theories (SMT)
-by incorporating optimization objectives.
+## Features
 
-## The Engines
+- **QSMT**: Delegates to external SMT solvers (Z3, CVC5, Yices, MathSAT5, Bitwuzla, Q3B)
+- **MaxSAT**: Built-in algorithms (OBV-BS, FM, RC2) and PySAT ecosystem
+- **Iterative**: SMT-based linear/binary search
 
-### Reduce to Quantified SMT
+## Installation
 
-- Z3
-- CVC5
-- Yices-QS
-- Bitwuzla
+```bash
+git clone https://github.com/ZJU-Automated-Reasoning-Group/pyomt.git
+cd pyomt
+pip install -e .
+```
 
-### Reduce to Weighted MaxSAT
+**External solvers** (optional): Run `bin_solvers/download.sh` or use `pysmt-install --z3 --msat --yices --cvc5 --btor --confirm-agreement`
 
+## Usage
 
-- The OBV-BS algorithm
-- The FM algorithm
-- The RC2 algorithm
-- Off-the-shelf MaxSAT solvers
+### OMT(BV) CLI
 
-~~~~
-https://github.com/FlorentAvellaneda/EvalMaxSAT
+```bash
+# QSMT with Z3
+pyomt solve regress/case1.smt2 --engine qsmt --solver-qsmt z3
 
-~~~~
+# MaxSAT-based
+pyomt solve regress/case2.smt2 --engine maxsat --solver-maxsat FM
 
-### SMT-based Iterative Search
+# Iterative search
+pyomt solve regress/case3.smt2 --engine iter --solver-iter z3-bs
+```
 
-- Linear search
-- Binary search
+### MaxSAT CLI
 
-## TBD
+```bash
+maxsat solve problem.wcnf --engine FM --timeout 600
+```
 
-### Integration
-Exiting OMT solvers?
-- Z3 (to MaxSAT?)
-- OptiMathSAT
-- ...
+## Engines
 
-### Optimizations
+- `--engine`: `qsmt`, `maxsat`, `iter`, `z3py`
+- `--solver-qsmt`: `z3`, `cvc5`, `yices`, `msat`, `bitwuzla`, `q3b`
+- `--solver-maxsat`: `FM`, `RC2`, `OBV-BS`
+- `--solver-iter`: `z3-ls`, `z3-bs`, `cvc5-ls`, `cvc5-bs`, etc.
 
-**Improvements to the OBV-BS algorithm**
-- Variable Polarity Setting: prefer 1 over 0 during the search?
+## Development
 
-The relevant API (NOTE: some SAT solvers in pysat do not support this API)
-~~~~
-    def set_phases(self, literals=[]):
-        """
-            Sets polarities of a given list of variables.
-        """
-~~~~
-TBD: to see how to use this API...
+```bash
+pytest -q                    # Run tests
+make -C docs html           # Build docs
+```
 
-## References
+## License
 
-- Sebastiani, R., & Tomasi, S. (2015). Optimization in SMT with LA(Q) cost functions. In International Conference on Principles and Practice of Constraint Programming (pp. 484-498). Springer, Cham.
-- Bjørner, N., Phan, A. D., & Fleckenstein, L. (2015). νZ-an optimizing SMT solver. In International Conference on Tools and Algorithms for the Construction and Analysis of Systems (pp. 194-199). Springer, Berlin, Heidelberg.
-- Martins, R., Manquinho, V. M., & Lynce, I. (2014). Open-WBO: A modular MaxSAT solver. In International Conference on Theory and Applications of Satisfiability Testing (pp. 438-445). Springer, Cham.
+MIT

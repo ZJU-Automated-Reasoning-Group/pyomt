@@ -1,10 +1,14 @@
 """Parse an OMT instance"""
 
-import z3
-from z3.z3consts import *
+from typing import Optional
 
-from pyomt.omtbv.bv_opt_iterative_search import bv_opt_with_linear_search, \
-    bv_opt_with_binary_search
+import z3
+from z3.z3consts import *  # noqa: F401,F403
+
+from pyomt.omtbv.bv_opt_iterative_search import (
+    bv_opt_with_linear_search,
+    bv_opt_with_binary_search,
+)
 from pyomt.omtbv.bv_opt_maxsat import bv_opt_with_maxsat
 from pyomt.omtbv.bv_opt_qsmt import bv_opt_with_qsmt
 
@@ -14,21 +18,21 @@ class OMTParser:
     1. Single-objective optimization
     2. Multi-objective optimization under the boxed mode (each obj is independent)"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         For multi-objective optimization,
         """
-        self.assertions = None
-        self.objective = None
-        self.to_max_obj = True  # convert all objectives to max
-        self.to_min_obj = False  # convert all objectives to min
-        self.debug = True
+        self.assertions: Optional[list[z3.ExprRef]] = None
+        self.objective: Optional[z3.ArithRef] = None
+        self.to_max_obj: bool = True  # convert all objectives to max
+        self.to_min_obj: bool = False  # convert all objectives to min
+        self.debug: bool = True
 
-    def parse_with_pysmt(self):
+    def parse_with_pysmt(self) -> None:
         # pysmt does not support
         raise NotImplementedError
 
-    def parse_with_z3(self, fml: str, is_file=False):
+    def parse_with_z3(self, fml: str, is_file: bool = False) -> None:
         s = z3.Optimize()
         if is_file:
             s.from_file(fml)
@@ -62,7 +66,7 @@ class OMTParser:
             print("OBJ ", self.objective)
 
 
-def demo_omt_parser():
+def demo_omt_parser() -> None:
     from pyomt.utils.z3opt_utils import optimize_as_long
     fml_two = """
     (declare-const x (_ BitVec 4)) \n (declare-const y (_ BitVec 4)) \n

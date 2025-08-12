@@ -41,7 +41,7 @@ class MaxSATSolver:
     Wrapper of the engines in maxsat with enhanced functionality
     """
 
-    def __init__(self, formula: WCNF, timeout: float = 3600):
+    def __init__(self, formula: WCNF, timeout: float = 3600) -> None:
         """
         Initialize MaxSAT solver
         
@@ -63,7 +63,7 @@ class MaxSATSolver:
         self.statistics = {}
         self._last_result = None
 
-    def set_maxsat_engine(self, name: Union[str, MaxSATEngine]):
+    def set_maxsat_engine(self, name: Union[str, MaxSATEngine]) -> None:
         """Set MaxSAT engine by name or enum"""
         if isinstance(name, str):
             try:
@@ -101,17 +101,27 @@ class MaxSATSolver:
         try:
             if self.maxsat_engine == MaxSATEngine.FM:
                 fm = FM(self.wcnf, verbose=0)
-                fm.compute()
-                result.cost = fm.cost
-                result.solution = fm.model
-                result.status = "optimal" if fm.found_optimum() else "satisfied"
+                solved = fm.compute()
+                if solved:
+                    result.cost = fm.cost
+                    result.solution = getattr(fm, 'model', None)
+                    result.status = "optimal"
+                else:
+                    result.cost = float('inf')
+                    result.solution = None
+                    result.status = "unsat"
                 
             elif self.maxsat_engine == MaxSATEngine.RC2:
                 rc2 = RC2(self.wcnf)
                 model = rc2.compute()
-                result.cost = rc2.cost
-                result.solution = model
-                result.status = "optimal" if model is not None else "unknown"
+                if model is not None:
+                    result.cost = rc2.cost
+                    result.solution = model
+                    result.status = "optimal"
+                else:
+                    result.cost = float('inf')
+                    result.solution = None
+                    result.status = "unsat"
                 
             elif self.maxsat_engine == MaxSATEngine.OBV_BS:
                 bits = [self.soft[i][0] for i in reversed(range(len(self.soft)))]
@@ -130,10 +140,15 @@ class MaxSATSolver:
             else:
                 logger.warning(f"Unknown engine {self.maxsat_engine}, using FM")
                 fm = FM(self.wcnf, verbose=0)
-                fm.compute()
-                result.cost = fm.cost
-                result.solution = fm.model
-                result.status = "optimal" if fm.found_optimum() else "satisfied"
+                solved = fm.compute()
+                if solved:
+                    result.cost = fm.cost
+                    result.solution = getattr(fm, 'model', None)
+                    result.status = "optimal"
+                else:
+                    result.cost = float('inf')
+                    result.solution = None
+                    result.status = "unsat"
 
         except Exception as e:
             logger.error(f"Error solving MaxSAT problem: {str(e)}")

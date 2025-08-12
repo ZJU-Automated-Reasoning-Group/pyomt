@@ -6,3 +6,5 @@ python-sat==0.1.8.dev1
 tqdm~=4.65.0
 meson>=0.64
 pytest==8.3.4
+click>=8.1.0
+setuptools

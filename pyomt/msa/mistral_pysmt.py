@@ -2,12 +2,20 @@
 Computing Minimal Satisfying Assignment
 Based on the algorithm from Alessandro Previti, Alexey S. Ignatiev
 """
+from typing import Dict, Optional, Iterable, Set, List
+
 from pysmt.smtlib.parser import SmtLibParser
 from pysmt.exceptions import SolverReturnedUnknownResultError
 from pysmt.shortcuts import Bool, get_model, Not, Solver, qelim, ForAll
 
 
-def get_qmodel(x_univl, formula, maxiters=None, solver_name=None, verbose=False):
+def get_qmodel(
+    x_univl: Iterable,
+    formula,
+    maxiters: Optional[int] = None,
+    solver_name: Optional[str] = None,
+    verbose: bool = False,
+) -> Optional[Dict]:
     """
     A simple 2QBF CEGAR implementation for SMT.
     """
@@ -52,7 +60,7 @@ class Mistral:
         Mistral solver class.
     """
 
-    def __init__(self, simplify, solver, qsolve, verbose, fname):
+    def __init__(self, simplify: bool, solver: Optional[str], qsolve: str, verbose: int, fname: str) -> None:
         """
             Constructor.
         """
@@ -74,7 +82,7 @@ class Mistral:
         if self.verb > 1:
             print('c vars ({0}):'.format(len(self.fvars)), list(self.fvars))
 
-    def solve(self):
+    def solve(self) -> Optional[List[str]]:
         """
             This method implements find_msa() procedure from Fig. 2
             of the dillig-cav12 paper.
@@ -89,7 +97,7 @@ class Mistral:
         model = self.get_model_forall(mus)
         return ['{0}={1}'.format(v, model[v]) for v in self.fvars - mus]
 
-    def compute_mus(self, X, fvars, lb):
+    def compute_mus(self, X: Set, fvars: Set, lb: int) -> Set:
         """
             Algorithm implements find_mus() procedure from Fig. 1
             of the dillig-cav12 paper.
@@ -118,7 +126,7 @@ class Mistral:
 
         return best
 
-    def get_model_forall(self, x_univl):
+    def get_model_forall(self, x_univl: Iterable) -> Optional[Dict]:
         """
             Calls either pysmt.shortcuts.get_model() or get_qmodel().
         """

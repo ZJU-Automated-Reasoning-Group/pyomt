@@ -1,6 +1,8 @@
 .vscode
+.cursor
+.z3-trace
 docs/build
-pyomt.egg-info/
+*egg-info*
 tmp_files/*
 !data/regressions/chc
 bin_solvers/*
@@ -10,7 +12,6 @@ tmp.py
 Result/*
 .DS_Store
 .pytest_cache
-pyomt/.pytest_cache
 *.qdimacs
 *.dot
 venv
@@ -18,12 +19,8 @@ venv
 
 # for binary solvers (download pre-built binaries, or download the code and build)
 deps/
-
-doc/
-
 # Directories, log, ..
 callgrind.out.*
-.z3-trace
 
 cmake-build-debug/*
 release/*
@@ -82,10 +79,8 @@ temp.h
 
 # achemso
 acs-*.bib
-
 # amsthm
 *.thm
-
 # beamer
 *.nav
 *.snm

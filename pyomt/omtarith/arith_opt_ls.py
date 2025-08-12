@@ -12,7 +12,13 @@ from pyomt.utils.z3expr_utils import get_expr_vars
 
 logger = logging.getLogger(__name__)
 
-def _arith_opt_with_ls_impl(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_name: str, max_iterations: int = 1000):
+def _arith_opt_with_ls_impl(
+    fml: z3.ExprRef,
+    obj: z3.ExprRef,
+    minimize: bool,
+    solver_name: str,
+    max_iterations: int = 1000,
+) -> str:
     """
     Local search for optimization of linear arithmetic (implementation).
     
@@ -226,7 +232,7 @@ def _arith_opt_with_ls_impl(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, so
     return str(best_obj_value)
 
 
-def arith_opt_with_ls(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_name: str):
+def arith_opt_with_ls(fml: z3.ExprRef, obj: z3.ExprRef, minimize: bool, solver_name: str) -> str:
     """
     Local search for optimization of linear arithmetic.
     
