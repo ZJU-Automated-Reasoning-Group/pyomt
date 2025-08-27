@@ -66,23 +66,5 @@ Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-API Reference
--------------
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-   maxsat
-   omtbv
-   omtarith
-   api/pyomt
-   api/maxsat
-   api/maxsmt
-   api/msa
-   api/cli
-   api/omtbv
-   api/omtarith
-   api/utils
 
 
