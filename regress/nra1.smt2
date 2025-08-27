@@ -1,0 +1,7 @@
+(declare-fun yh () Real)
+(declare-fun yw () Real)
+(define-fun obj () Real (* yh yw))
+(assert (and (<= yh 5) (<= 4 yh)))
+(assert (and (<= yw 2) (<= 1 yw)))
+(maximize obj)
+(check-sat)
