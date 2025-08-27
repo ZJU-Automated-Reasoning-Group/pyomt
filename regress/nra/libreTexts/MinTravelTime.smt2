@@ -1,0 +1,12 @@
+; https://math.libretexts.org/Courses/Mount_Royal_University/MATH_1200%3A_Calculus_for_Scientists_I/3%3A_Applications_of_Derivatives/3.6%3A_Applied_Optimization_Problems -> 3.6.5
+(declare-fun x () Real)
+(declare-fun y () Real)
+(assert (>= x 0))
+(assert (<= x 6))
+(assert (> y 0))
+(assert (> (- y (/ x 8)) 0))
+(assert (= (* 9 (- y (/ x 8)) (- y (/ x 8))) (+ (* (- 6 x) (- 6 x)) 4)))
+(minimize y)
+(check-sat)
+(get-objectives)
+(exit)

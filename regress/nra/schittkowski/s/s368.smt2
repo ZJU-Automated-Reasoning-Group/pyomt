@@ -1,0 +1,25 @@
+(declare-const x0 Real)
+(assert (<= 0.0 x0))
+(declare-const x1 Real)
+(assert (<= 0.0 x1))
+(declare-const x2 Real)
+(assert (<= 0.0 x2))
+(declare-const x3 Real)
+(assert (<= 0.0 x3))
+(declare-const x4 Real)
+(assert (<= 0.0 x4))
+(declare-const x5 Real)
+(assert (<= 0.0 x5))
+(declare-const x6 Real)
+(assert (<= 0.0 x6))
+(declare-const x7 Real)
+(assert (<= 0.0 x7))
+
+
+(minimize
+	(- (^ (+ (^ x0 3.0) (^ x1 3.0) (^ x2 3.0) (^ x3 3.0) (^ x4 3.0) (^ x5 3.0) (^ x6 3.0) (^ x7 3.0)) 2.0) (* (+ (^ x0 2.0) (^ x1 2.0) (^ x2 2.0) (^ x3 2.0) (^ x4 2.0) (^ x5 2.0) (^ x6 2.0) (^ x7 2.0)) (+ (^ x0 4.0) (^ x1 4.0) (^ x2 4.0) (^ x3 4.0) (^ x4 4.0) (^ x5 4.0) (^ x6 4.0) (^ x7 4.0))))
+)
+(check-sat)
+(get-objectives)
+(exit)
+

@@ -1,0 +1,11 @@
+(declare-fun x_0 () Real)
+(declare-fun x_1 () Real)
+(declare-fun x_2 () Real)
+(declare-fun x_3 () Real)
+(assert (<= (+ 
+    (* x_0 x_0) (* x_1 x_1) (* x_2 x_2) 
+    (* x_3 x_3)  ) 1))
+(maximize (+ x_0 x_1 x_2 x_3))
+(check-sat)
+(get-objectives)
+(exit)

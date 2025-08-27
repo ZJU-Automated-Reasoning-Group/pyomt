@@ -1,0 +1,27 @@
+(declare-const x0 Real)
+(assert (<= 0.0 x0))
+(declare-const x1 Real)
+(assert (<= 0.0 x1))
+(declare-const x2 Real)
+(assert (<= 0.0 x2))
+(declare-const x3 Real)
+(assert (<= 0.0 x3))
+(declare-const x4 Real)
+(assert (<= 0.0 x4))
+(declare-const x5 Real)
+(assert (<= 0.0 x5))
+(declare-const x6 Real)
+(assert (<= 0.0 x6))
+
+(assert (= (+ (* 1.0 x4) (* (- 4.200000) (^ (sin x0) 2.0))) 0.0))
+(assert (= (+ (* 1.0 x5) (* (- 4.200000) (^ (sin x1) 2.0))) 0.0))
+(assert (= (+ (* 1.0 x6) (* (- 4.200000) (^ (sin x2) 2.0))) 0.0))
+(assert (= (+ (* 1.0 x4) (* 2.0 x5) (* 2.0 x6) (* (- 7.200000) (^ (sin x3) 2.0))) 0.0))
+
+(minimize
+	(- (* (* x4 x5) x6))
+)
+(check-sat)
+(get-objectives)
+(exit)
+
