@@ -9,7 +9,7 @@ from pyomt.utils.z3expr_utils import get_expr_vars
 # NOTE: both pysmt and z3 have a class "Solver"
 
 
-def z3_to_pysmt_vars(z3vars: List[z3.ExprRef]):
+def z3_to_pysmt_vars(z3vars: List[z3.ExprRef]) -> List:
     res: List = []
     for v in z3vars:
         if z3.is_int(v):
@@ -25,7 +25,7 @@ def z3_to_pysmt_vars(z3vars: List[z3.ExprRef]):
     return res
 
 
-def z3_to_pysmt(zf: z3.ExprRef, obj: z3.ExprRef):
+def z3_to_pysmt(zf: z3.ExprRef, obj: z3.ExprRef) -> Tuple:
     # FIXME: we use  the following two lines to hide warnings from PYSMT(?)
     #  However, they seem not to be necessary and z3.z3util.get_vars can be very slow
     #  (Is the warning caused py pySMT?)
@@ -42,5 +42,5 @@ def z3_to_pysmt(zf: z3.ExprRef, obj: z3.ExprRef):
     # return pysmt_vars, pysmt_fml
 
 
-def quantifier_elimination(qexp):
+def quantifier_elimination(qexp) -> object:
     return qelim(qexp)

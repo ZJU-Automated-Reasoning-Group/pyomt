@@ -3,7 +3,7 @@
 Do we need this anymore?
 """
 import sys
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional  
 
 import z3
 
@@ -14,16 +14,16 @@ from pyomt.utils.z3expr_utils import get_expr_vars
 # cr projected_var_ids
 
 
-def is_literal(exp: z3.ExprRef): return z3.is_const(exp) and exp.decl().kind() == z3.Z3_OP_UNINTERPRETED
+def is_literal(exp: z3.ExprRef) -> bool: return z3.is_const(exp) and exp.decl().kind() == z3.Z3_OP_UNINTERPRETED
 
 
-def is_ite(exp: z3.ExprRef): return exp.decl().kind() == z3.Z3_OP_ITE
+def is_ite(exp: z3.ExprRef) -> bool: return exp.decl().kind() == z3.Z3_OP_ITE
 
 
-def is_iff(exp: z3.ExprRef): return exp.decl().kind() == z3.Z3_OP_IFF
+def is_iff(exp: z3.ExprRef) -> bool: return exp.decl().kind() == z3.Z3_OP_IFF
 
 
-def proj_id_last(var, n_proj_vars, n_vars):
+def proj_id_last(var: int, n_proj_vars: int, n_vars: int) -> int:
     assert var != 0
     is_neg = var < 0
     if abs(var) <= n_proj_vars:
@@ -34,7 +34,7 @@ def proj_id_last(var, n_proj_vars, n_vars):
     return new_var * (-1 if is_neg else 1)
 
 
-def bitblast(formula: z3.ExprRef):
+def bitblast(formula: z3.ExprRef) -> Tuple[List[str], Dict[str, int], Dict[str, List[str]]]:
     # input_vars = [x for x in collect_vars(formula)]  # this might be slow?
     input_vars = get_expr_vars(formula)
     # input_vars = get_vars(formula)  # FIXME: get_vars is from z3, but it can be VERY slow...
@@ -57,7 +57,7 @@ def bitblast(formula: z3.ExprRef):
     return blasted, id_table, bv2bool
 
 
-def to_dimacs(cnf, table, proj_last) -> Tuple[List[str], List[str]]:
+def to_dimacs(cnf: List[z3.ExprRef], table: Dict[str, int], proj_last: bool) -> Tuple[List[str], List[str]]:
     cnf_clauses = []
     projection_scope = len(table)
 
@@ -90,7 +90,7 @@ def to_dimacs(cnf, table, proj_last) -> Tuple[List[str], List[str]]:
     return cnf_header, cnf_clauses
 
 
-def to_dimacs_numeric(cnf, table, proj_last):
+def to_dimacs_numeric(cnf: List[z3.ExprRef], table: Dict[str, int], proj_last: bool) -> Tuple[List[str], List[List[int]]]:
     cnf_clauses = []
     projection_scope = len(table)
 
@@ -113,7 +113,7 @@ def to_dimacs_numeric(cnf, table, proj_last):
     return cnf_header, cnf_clauses
 
 
-def map_bitvector(input_vars):
+def map_bitvector(input_vars: List[z3.ExprRef]) -> Tuple[List[z3.ExprRef], List[z3.ExprRef], Dict[str, List[str]]]:
     # print("input vars...")
     # print(input_vars)
     clauses = []
@@ -135,7 +135,7 @@ def map_bitvector(input_vars):
     return clauses, mapped_vars, bv2bool
 
 
-def dimacs_visitor(exp, table):
+def dimacs_visitor(exp: z3.ExprRef, table: Dict[str, int]):
     if is_literal(exp):
         name = exp.decl().name()
         if name in table:
@@ -163,7 +163,7 @@ def dimacs_visitor(exp, table):
         raise Exception("Unhandled type: ", exp)
 
 
-def dimacs_visitor_numeric(exp, table):
+def dimacs_visitor_numeric(exp: z3.ExprRef, table: Dict[str, int]):
     if is_literal(exp):
         name = exp.decl().name()
         if name in table:
@@ -191,7 +191,7 @@ def dimacs_visitor_numeric(exp, table):
         raise Exception("Unhandled type: ", exp)
 
 
-def collect_vars(exp, seen=None):
+def collect_vars(exp: z3.ExprRef, seen: Optional[Dict[z3.ExprRef, bool]] = None):
     # TODO: is this function correct?
     if seen is None:
         seen = {}
@@ -235,7 +235,7 @@ List[str], List[int]]:
     return bv2bool, id_table, header, clauses
 
 
-def translate_smt2formula_to_cnf_file(formula: z3.ExprRef, output_file: str):
+def translate_smt2formula_to_cnf_file(formula: z3.ExprRef, output_file: str) -> None:
     projection_last = ''
     projection_last = projection_last and projection_last.lower() != "false"
     blasted, id_table, bv2bool = bitblast(formula)
@@ -249,7 +249,7 @@ def translate_smt2formula_to_cnf_file(formula: z3.ExprRef, output_file: str):
 
 
 # TODO: what is projection_last
-def test_blast(input_file):
+def test_blast(input_file: str) -> None:
     projection_last = ''
     projection_last = projection_last and projection_last.lower() != "false"
 

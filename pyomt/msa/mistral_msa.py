@@ -6,7 +6,7 @@ class which is used to find the minimal satisfying assignment for a given formul
 NOTE:
     - MSA finding is a special case of optimization modulo theory
 """
-from typing import FrozenSet
+from typing import FrozenSet, Optional, List, Union
 
 import z3
 from pyomt.utils.z3expr_utils import get_expr_vars
@@ -17,7 +17,7 @@ class MSASolver:
     Mistral solver class.
     """
 
-    def __init__(self, verbose=1):
+    def __init__(self, verbose: int = 1) -> None:
         """
         Constructor.
         """
@@ -47,7 +47,7 @@ class MSASolver:
     def validate_small_model(self, model: z3.ModelRef) -> bool:
         """Check whether a small model is a 'sufficient condition'"""
         decls = model.decls()
-        model_cnts = []
+        model_cnts: List[z3.ExprRef] = []
         for var in get_expr_vars(self.formula):
             if var.decl() in decls:
                 model_cnts.append(var == model[var])
@@ -59,7 +59,7 @@ class MSASolver:
             return False
         return True
 
-    def find_small_model(self):
+    def find_small_model(self) -> Union[z3.ModelRef, bool]:
         """
         This method implements find_msa() procedure from Fig. 2
         of the dillig-cav12 paper.
@@ -76,7 +76,7 @@ class MSASolver:
         return model
         # return ['{0}={1}'.format(v, model[v]) for v in frozenset(self.fvars) - mus]
 
-    def compute_mus(self, X: FrozenSet, fvars: FrozenSet, lb: int):
+    def compute_mus(self, X: FrozenSet[z3.ExprRef], fvars: FrozenSet[z3.ExprRef], lb: int) -> FrozenSet[z3.ExprRef]:
         """
         Algorithm implements find_mus() procedure from Fig. 1
         of the dillig-cav12 paper.
@@ -105,7 +105,7 @@ class MSASolver:
 
         return best
 
-    def get_model_forall(self, x_univl):
+    def get_model_forall(self, x_univl: FrozenSet[z3.ExprRef]) -> Union[z3.ModelRef, bool]:
         s = z3.Solver()
         if len(x_univl) >= 1:
             qfml = z3.ForAll(list(x_univl), self.formula)

@@ -1,10 +1,12 @@
 """
-Reduce OMT(BV) to QSMT and call SMT solvers
-that support quantified bit-vector formulas
-- Z3
-- CVC5
-- Q3B
-- ...?
+Reduce OMT(BV) to QSMT and call SMT solvers that support quantified bit-vector formulas.
+
+For example, to minimize y in φ(y) ∧ y > 0 ∧ y < 10:
+
+1. Original OMT problem: min y s.t. φ(y) ∧ y > 0 ∧ y < 10
+2. Reduction to QSMT: φ(y) ∧ y > 0 ∧ y < 10 ∧ ∀m. (φ(m) ∧ m > 0 ∧ m < 10) → y ≤ m
+
+The quantified formula ensures that y is the minimum value satisfying all constraints.
 """
 
 import z3

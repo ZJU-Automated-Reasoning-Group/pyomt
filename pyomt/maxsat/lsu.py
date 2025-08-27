@@ -77,6 +77,7 @@ import os
 import re
 import sys
 from threading import Timer
+from typing import List, Optional, Any, Union, Tuple
 
 from pysat.card import ITotalizer
 from pysat.formula import CNF, WCNF, WCNFPlus
@@ -111,7 +112,7 @@ class LSU:
         :type verbose: int
     """
 
-    def __init__(self, formula, solver='g4', expect_interrupt=False, verbose=0):
+    def __init__(self, formula: WCNF, solver: str = 'g4', expect_interrupt: bool = False, verbose: int = 0) -> None:
         """
             Constructor.
         """
@@ -125,7 +126,7 @@ class LSU:
         self.tot = None  # totalizer encoder for the cardinality constraint
         self._init(formula)  # initiaize SAT oracle
 
-    def _init(self, formula):
+    def _init(self, formula: WCNF) -> None:
         """
             SAT oracle initialization. The method creates a new SAT oracle and
             feeds it with the formula's hard clauses. Afterwards, all soft
@@ -151,28 +152,28 @@ class LSU:
         if self.verbose > 1:
             print('c formula: {0} vars, {1} hard, {2} soft'.format(formula.nv, len(formula.hard), len(formula.soft)))
 
-    def __del__(self):
+    def __del__(self) -> None:
         """
             Destructor.
         """
 
         self.delete()
 
-    def __enter__(self):
+    def __enter__(self) -> 'LSU':
         """
             'with' constructor.
         """
 
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         """
             'with' destructor.
         """
 
         self.delete()
 
-    def delete(self):
+    def delete(self) -> None:
         """
             Explicit destructor of the internal SAT oracle and the
             :class:`.ITotalizer` object.
@@ -186,7 +187,7 @@ class LSU:
             self.tot.delete()
             self.tot = None
 
-    def solve(self):
+    def solve(self) -> bool:
         """
             Computes a solution to the MaxSAT problem. The method implements
             the LSU/LSUS algorithm, i.e. it represents a loop, each iteration
@@ -224,7 +225,7 @@ class LSU:
 
         return is_sat
 
-    def get_model(self):
+    def get_model(self) -> List[int]:
         """
             This method returns a model obtained during a prior satisfiability
             oracle call made in :func:`solve`.
@@ -233,7 +234,7 @@ class LSU:
 
         return self.model
 
-    def found_optimum(self):
+    def found_optimum(self) -> bool:
         """
             Checks if the optimum solution was found in a prior call to
             :func:`solve`.
@@ -242,7 +243,7 @@ class LSU:
 
         return self.oracle.get_status() is not None
 
-    def _get_model_cost(self, formula, model):
+    def _get_model_cost(self, formula: WCNF, model: List[int]) -> int:
         """
             Given a WCNF formula and a model, the method computes the MaxSAT
             cost of the model, i.e. the sum of weights of soft clauses that are
@@ -263,7 +264,7 @@ class LSU:
 
         return cost
 
-    def _assert_lt(self, cost):
+    def _assert_lt(self, cost: int) -> None:
         """
             The method enforces an upper bound on the cost of the MaxSAT
             solution. This is done by encoding the sum of all soft clause
@@ -287,7 +288,7 @@ class LSU:
 
         self.oracle.add_clause([-self.tot.rhs[cost - 1]])
 
-    def interrupt(self):
+    def interrupt(self) -> None:
         """
             Interrupt the current execution of LSU's :meth:`solve` method.
             Can be used to enforce time limits using timer objects. The
@@ -297,14 +298,14 @@ class LSU:
 
         self.oracle.interrupt()
 
-    def clear_interrupt(self):
+    def clear_interrupt(self) -> None:
         """
             Clears an interruption.
         """
 
         self.oracle.clear_interrupt()
 
-    def oracle_time(self):
+    def oracle_time(self) -> float:
         """
             Method for calculating and reporting the total SAT solving time.
         """
@@ -326,7 +327,7 @@ class LSUPlus(LSU, object):
         :type verbose: int
     """
 
-    def __init__(self, formula, solver, expect_interrupt=False, verbose=0):
+    def __init__(self, formula: WCNFPlus, solver: str, expect_interrupt: bool = False, verbose: int = 0) -> None:
         """
             Constructor.
         """
@@ -342,7 +343,7 @@ class LSUPlus(LSU, object):
         for am in formula.atms:
             self.oracle.add_atmost(*am)
 
-    def _assert_lt(self, cost):
+    def _assert_lt(self, cost: int) -> None:
         """
             Overrides _assert_lt of :class:`.LSU` in order to use Minicard's
             native support for cardinality constraints
@@ -356,7 +357,7 @@ class LSUPlus(LSU, object):
 
 #
 # ==============================================================================
-def parse_options():
+def parse_options() -> Tuple[bool, str, Optional[float], int, List[str]]:
     """
         Parses command-line options.
     """
@@ -394,7 +395,7 @@ def parse_options():
 
 #
 # ==============================================================================
-def print_usage():
+def print_usage() -> None:
     """
         Prints usage message.
     """

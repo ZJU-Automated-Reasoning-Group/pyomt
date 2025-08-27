@@ -13,7 +13,7 @@ The goal is to find an assignment that maximizes the sum of weights of satisfied
 """
 
 from typing import List, Tuple, Optional
-
+import time
 import z3
 
 from .base import MaxSMTAlgorithm, MaxSMTSolverBase
@@ -62,27 +62,27 @@ class MaxSMTSolver:
         else:
             raise ValueError(f"Unknown algorithm: {algorithm}")
 
-    def add_hard_constraint(self, constraint):
+    def add_hard_constraint(self, constraint: z3.ExprRef) -> None:
         """Add a hard constraint (must be satisfied)
-        
+
         Args:
             constraint: SMT formula that must be satisfied
         """
         self.hard_constraints.append(constraint)
         self.solver.add_hard_constraint(constraint)
-    
-    def add_hard_constraints(self, constraints):
+
+    def add_hard_constraints(self, constraints: List[z3.ExprRef]) -> None:
         """Add multiple hard constraints
-        
+
         Args:
             constraints: List of SMT formulas that must be satisfied
         """
         self.hard_constraints.extend(constraints)
         self.solver.add_hard_constraints(constraints)
 
-    def add_soft_constraint(self, constraint, weight: float = 1.0):
+    def add_soft_constraint(self, constraint: z3.ExprRef, weight: float = 1.0) -> None:
         """Add a soft constraint with a weight
-        
+
         Args:
             constraint: SMT formula that should be satisfied if possible
             weight: Weight of the constraint (higher = more important)
@@ -90,20 +90,20 @@ class MaxSMTSolver:
         self.soft_constraints.append(constraint)
         self.weights.append(weight)
         self.solver.add_soft_constraint(constraint, weight)
-    
-    def add_soft_constraints(self, constraints, weights=None):
+
+    def add_soft_constraints(self, constraints: List[z3.ExprRef], weights: Optional[List[float]] = None) -> None:
         """Add multiple soft constraints with weights
-        
+
         Args:
-            constraints: List of SMT formulas 
+            constraints: List of SMT formulas
             weights: List of weights (default: all 1.0)
         """
         if weights is None:
             weights = [1.0] * len(constraints)
-        
+
         if len(constraints) != len(weights):
             raise ValueError("Number of constraints must match number of weights")
-        
+
         self.soft_constraints.extend(constraints)
         self.weights.extend(weights)
         self.solver.add_soft_constraints(constraints, weights)
@@ -150,7 +150,7 @@ def solve_maxsmt(hard_constraints: List[z3.ExprRef],
     return solver.solve()
 
 
-def demo():
+def demo() -> None:
     """Demonstrate the MaxSMT solver with a simple example"""
     import time
     
@@ -182,7 +182,7 @@ def demo():
         print(f"Time: {end_time - start_time:.4f} seconds")
 
 
-def example_scheduling():
+def example_scheduling() -> None:
     """Example: Job scheduling problem with MaxSMT
     
     We have jobs with durations and deadlines.
@@ -326,7 +326,7 @@ def example_scheduling():
                           f"{z3_start:2}-{z3_end:2} {' (Late)' if z3_end > deadline else '       '} | {deadline}")
 
 
-def example_minimal_correction():
+def example_minimal_correction() -> None:
     """Example: Minimal correction subset
     
     Find a minimal subset of clauses to remove to make an unsatisfiable formula satisfiable.

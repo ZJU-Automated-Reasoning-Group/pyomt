@@ -14,9 +14,8 @@ Basic Features:
 import multiprocessing as mp
 from multiprocessing import Process, Queue
 import psutil
-import signal
 import time
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List
 import sys
 
 
@@ -35,28 +34,21 @@ def terminate_process_tree(pid: int) -> None:
     try:
         parent = psutil.Process(pid)
         children = parent.children(recursive=True)
-
-        # First terminate children
-        for child in children:
+        
+        # Terminate all processes
+        for proc in children + [parent]:
             try:
-                child.terminate()
+                proc.terminate()
             except psutil.NoSuchProcess:
                 pass
-
-        # Then terminate parent
-        try:
-            parent.terminate()
-        except psutil.NoSuchProcess:
-            pass
-
-        # Wait for processes to terminate and force kill if necessary
+        
+        # Wait and force kill if necessary
         gone, alive = psutil.wait_procs(children + [parent], timeout=3)
-        for p in alive:
+        for proc in alive:
             try:
-                p.kill()
+                proc.kill()
             except psutil.NoSuchProcess:
                 pass
-
     except psutil.NoSuchProcess:
         pass
 
@@ -75,6 +67,13 @@ class Portfolio:
     def __init__(self, timeout: float = 60):
         self.timeout = timeout
         self._processes: List[Process] = []
+
+    def _cleanup_processes(self):
+        """Clean up all running processes"""
+        for p in self._processes:
+            if p.is_alive():
+                terminate_process_tree(p.pid)
+        self._processes.clear()
 
     def solve(self, solvers: List[Callable], args: tuple) -> Any:
         """
@@ -102,20 +101,17 @@ class Portfolio:
             p.start()
 
         try:
-            # Wait for first result
             start_time = time.time()
             while True:
                 # Check for results
                 try:
-                    result = result_queue.get_nowait()
-                    return result
+                    return result_queue.get_nowait()
                 except mp.queues.Empty:
                     pass
 
                 # Check for errors
                 try:
                     exc_type, exc_msg, exc_tb = error_queue.get_nowait()
-                    # Re-raise exception from worker
                     raise exc_type(exc_msg)
                 except mp.queues.Empty:
                     pass
@@ -124,25 +120,16 @@ class Portfolio:
                 if time.time() - start_time > self.timeout:
                     raise TimeoutException("Portfolio solver timed out")
 
-                # Small sleep to prevent busy waiting
-                time.sleep(0.01)
+                time.sleep(0.01)  # Prevent busy waiting
 
         finally:
-            # Clean up all processes
-            for p in self._processes:
-                if p.is_alive():
-                    terminate_process_tree(p.pid)
-            self._processes.clear()
+            self._cleanup_processes()
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # Ensure cleanup on context exit
-        for p in self._processes:
-            if p.is_alive():
-                terminate_process_tree(p.pid)
-        self._processes.clear()
+        self._cleanup_processes()
 
 
 # Module-level protection

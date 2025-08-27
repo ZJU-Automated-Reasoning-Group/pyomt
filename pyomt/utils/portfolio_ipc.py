@@ -85,25 +85,24 @@ def terminate_process_tree(pid: int) -> None:
     try:
         parent = psutil.Process(pid)
         children = parent.children(recursive=True)
-
+        
         for child in children:
             try:
                 child.terminate()
             except psutil.NoSuchProcess:
                 pass
-
+        
         try:
             parent.terminate()
         except psutil.NoSuchProcess:
             pass
-
+        
         gone, alive = psutil.wait_procs(children + [parent], timeout=3)
         for p in alive:
             try:
                 p.kill()
             except psutil.NoSuchProcess:
                 pass
-
     except psutil.NoSuchProcess:
         pass
 
@@ -113,11 +112,11 @@ def worker_wrapper(func: Callable, args: tuple, worker_id: int,
                    comm_pipe: Connection, control_event: Event,
                    status_interval: float = 1.0) -> None:
     """Enhanced worker wrapper with communication support"""
-
+    
     def send_message(msg_type: MessageType, data: Any):
         msg = Message(type=msg_type, data=data, worker_id=worker_id)
         comm_pipe.send(msg.to_dict())
-
+    
     def handle_control_commands():
         if comm_pipe.poll():
             msg_dict = comm_pipe.recv()
@@ -132,7 +131,7 @@ def worker_wrapper(func: Callable, args: tuple, worker_id: int,
                     raise InterruptedError("Worker stopped by control command")
                 elif cmd == ControlCommand.REQUEST_STATUS:
                     send_status()
-
+    
     def send_status():
         process = psutil.Process()
         status_data = {
@@ -141,57 +140,46 @@ def worker_wrapper(func: Callable, args: tuple, worker_id: int,
             "status": current_status.value
         }
         send_message(MessageType.STATUS, status_data)
-
+    
     try:
         current_status = WorkerStatus.INITIALIZING
-        # Send status as dictionary instead of just the value
         send_message(MessageType.STATUS, {"status": current_status.value})
-
+        
         # Start status monitoring thread
         def status_monitor():
-            while True:
-                if stop_monitor.is_set():
-                    break
+            while not stop_monitor.is_set():
                 send_status()
                 time.sleep(status_interval)
-
+        
         stop_monitor = threading.Event()
         monitor_thread = threading.Thread(target=status_monitor)
         monitor_thread.start()
-
+        
         # Main worker logic
         current_status = WorkerStatus.RUNNING
-        # Send status as dictionary instead of just the value
         send_message(MessageType.STATUS, {"status": current_status.value})
-
+        
         result = None
         try:
             while True:
                 handle_control_commands()
-
-                # Wait for resume if paused
-                control_event.wait()
-
-                # Actual computation step
+                control_event.wait()  # Wait for resume if paused
+                
                 if result is None:
                     result = func(*args)
                     send_message(MessageType.INTERMEDIATE_RESULT, result)
                 else:
                     break
-
         finally:
-            # Clean up status monitor
             stop_monitor.set()
             monitor_thread.join()
-
+        
         current_status = WorkerStatus.COMPLETED
-        # Send status as dictionary instead of just the value
         send_message(MessageType.STATUS, {"status": current_status.value})
         result_queue.put(result)
-
+        
     except Exception as e:
         current_status = WorkerStatus.ERROR
-        # Send status as dictionary instead of just the value
         send_message(MessageType.STATUS, {
             "status": current_status.value,
             "error": str(e)
@@ -209,7 +197,7 @@ class Portfolio:
         self._pipes: List[Connection] = []
         self._control_events: List[Event] = []
         self._ctx = get_context(start_method) if start_method else mp.get_context()
-
+        
         # Message handlers
         self._message_handlers = {
             MessageType.STATUS: self._handle_status,
@@ -218,90 +206,71 @@ class Portfolio:
             MessageType.RESOURCE_USAGE: self._handle_resource_usage,
             MessageType.ERROR: self._handle_error
         }
-
+        
         # State tracking
         self._worker_states: Dict[int, Dict] = {}
         self._intermediate_results: Dict[int, List] = {}
-
+    
+    def _handle_message(self, msg: Message, target_dict: Dict, key: str = None):
+        """Generic message handler"""
+        worker_id = msg.worker_id
+        if worker_id not in target_dict:
+            target_dict[worker_id] = {}
+        
+        if key:
+            target_dict[worker_id][key] = msg.data
+        else:
+            target_dict[worker_id].update(msg.data)
+    
     def _handle_status(self, msg: Message):
-        """Handle status messages from workers"""
-        worker_id = msg.worker_id
-        if worker_id not in self._worker_states:
-            self._worker_states[worker_id] = {}
-
-        # msg.data is now guaranteed to be a dictionary
-        self._worker_states[worker_id].update(msg.data)
-
+        self._handle_message(msg, self._worker_states)
+    
     def _handle_progress(self, msg: Message):
-        worker_id = msg.worker_id
-        if worker_id not in self._worker_states:
-            self._worker_states[worker_id] = {}
-        self._worker_states[worker_id]['progress'] = msg.data
-
+        self._handle_message(msg, self._worker_states, 'progress')
+    
     def _handle_intermediate_result(self, msg: Message):
-        worker_id = msg.worker_id
-        if worker_id not in self._intermediate_results:
-            self._intermediate_results[worker_id] = []
-        self._intermediate_results[worker_id].append(msg.data)
-
+        self._handle_message(msg, self._intermediate_results, 'intermediate_results')
+    
     def _handle_resource_usage(self, msg: Message):
-        worker_id = msg.worker_id
-        if worker_id not in self._worker_states:
-            self._worker_states[worker_id] = {}
-        self._worker_states[worker_id]['resources'] = msg.data
-
+        self._handle_message(msg, self._worker_states, 'resources')
+    
     def _handle_error(self, msg: Message):
-        worker_id = msg.worker_id
-        if worker_id not in self._worker_states:
-            self._worker_states[worker_id] = {}
-        self._worker_states[worker_id]['error'] = msg.data
-
+        self._handle_message(msg, self._worker_states, 'error')
+    
     def get_worker_state(self, worker_id: int) -> Dict:
-        """Get current state of a specific worker"""
         return self._worker_states.get(worker_id, {})
-
+    
     def get_all_states(self) -> Dict[int, Dict]:
-        """Get current states of all workers"""
         return self._worker_states.copy()
-
+    
     def get_intermediate_results(self, worker_id: int) -> List:
-        """Get intermediate results from a specific worker"""
         return self._intermediate_results.get(worker_id, [])
-
+    
     def send_control_command(self, worker_id: int, command: ControlCommand):
-        """Send control command to a specific worker"""
         if 0 <= worker_id < len(self._pipes):
-            msg = Message(
-                type=MessageType.CONTROL,
-                data=command.value,
-                worker_id=worker_id
-            )
+            msg = Message(type=MessageType.CONTROL, data=command.value, worker_id=worker_id)
             self._pipes[worker_id][0].send(msg.to_dict())
-
+    
     def pause_worker(self, worker_id: int):
-        """Pause a specific worker"""
         self.send_control_command(worker_id, ControlCommand.PAUSE)
-
+    
     def resume_worker(self, worker_id: int):
-        """Resume a specific worker"""
         self.send_control_command(worker_id, ControlCommand.RESUME)
-
+    
     def stop_worker(self, worker_id: int):
-        """Stop a specific worker"""
         self.send_control_command(worker_id, ControlCommand.STOP)
-
+    
     def solve(self, solvers: List[Callable], args: tuple) -> Any:
-        """Enhanced solve method with communication support"""
         result_queue = self._ctx.Queue()
         error_queue = self._ctx.Queue()
-
+        
         # Create communication pipes and control events for each worker
         for i in range(len(solvers)):
             parent_conn, child_conn = self._ctx.Pipe()
             self._pipes.append((parent_conn, child_conn))
             self._control_events.append(self._ctx.Event())
             self._control_events[-1].set()  # Start in running state
-
+        
         # Start all worker processes
         for i, solver in enumerate(solvers):
             p = self._ctx.Process(
@@ -312,7 +281,7 @@ class Portfolio:
             )
             self._processes.append(p)
             p.start()
-
+        
         try:
             start_time = time.time()
             while True:
@@ -324,42 +293,32 @@ class Portfolio:
                         handler = self._message_handlers.get(msg.type)
                         if handler:
                             handler(msg)
-
+                
                 # Check for results
                 try:
                     result = result_queue.get_nowait()
                     return result
                 except mp.queues.Empty:
                     pass
-
+                
                 # Check for errors
                 try:
                     exc_type, exc_msg, exc_tb = error_queue.get_nowait()
                     raise exc_type(exc_msg)
                 except mp.queues.Empty:
                     pass
-
+                
                 # Check timeout
                 if time.time() - start_time > self.timeout:
                     raise TimeoutException("Portfolio solver timed out")
-
+                
                 time.sleep(0.01)
-
+        
         finally:
-            # Clean up
-            for p in self._processes:
-                if p.is_alive():
-                    terminate_process_tree(p.pid)
-            self._processes.clear()
-            self._pipes.clear()
-            self._control_events.clear()
-            self._worker_states.clear()
-            self._intermediate_results.clear()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
+            self._cleanup()
+    
+    def _cleanup(self):
+        """Clean up resources"""
         for p in self._processes:
             if p.is_alive():
                 terminate_process_tree(p.pid)
@@ -368,3 +327,9 @@ class Portfolio:
         self._control_events.clear()
         self._worker_states.clear()
         self._intermediate_results.clear()
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._cleanup()

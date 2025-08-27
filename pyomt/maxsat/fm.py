@@ -82,6 +82,7 @@ import getopt
 import os
 import re
 import sys
+from typing import List, Dict, Tuple, Optional, Any
 
 from pysat.card import CardEnc, EncType
 from pysat.formula import CNFPlus, WCNFPlus
@@ -134,7 +135,7 @@ class FM(object):
         :type verbose: int
     """
 
-    def __init__(self, formula, enc=EncType.pairwise, solver='m22', verbose=1):
+    def __init__(self, formula: WCNFPlus, enc: int = EncType.pairwise, solver: str = 'm22', verbose: int = 1) -> None:
         """
             Constructor.
         """
@@ -160,21 +161,21 @@ class FM(object):
         # initialize SAT oracle with hard clauses only
         self.init(with_soft=False)
 
-    def __enter__(self):
+    def __enter__(self) -> 'FM':
         """
             'with' constructor.
         """
 
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         """
             'with' destructor.
         """
 
         self.delete()
 
-    def init(self, with_soft=True):
+    def init(self, with_soft: bool = True) -> None:
         """
             The method for the SAT oracle initialization. Since the oracle is
             is used non-incrementally, it is reinitialized at every iteration
@@ -190,7 +191,7 @@ class FM(object):
         if self.atm1:  # this check is needed at the beggining (before iteration 1)
             assert self.oracle.supports_atmost(), \
                 '{0} does not support native cardinality constraints. Make sure you use the right type of formula.'.format(
-                    solver_name)
+                    self.solver)
 
             # self.atm1 is not empty only in case of minicard
             for am in self.atm1:
@@ -201,7 +202,7 @@ class FM(object):
                 if cpy:
                     self.oracle.add_clause(cl)
 
-    def delete(self):
+    def delete(self) -> None:
         """
             Explicit destructor of the internal SAT oracle.
         """
@@ -212,7 +213,7 @@ class FM(object):
             self.oracle.delete()
             self.oracle = None
 
-    def reinit(self):
+    def reinit(self) -> None:
         """
             This method calls :func:`delete` and :func:`init` to reinitialize
             the internal SAT oracle. This is done at every iteration of the
@@ -220,9 +221,9 @@ class FM(object):
         """
 
         self.delete()
-        self.init();
+        self.init()
 
-    def compute(self):
+    def compute(self) -> bool:
         """
             Compute a MaxSAT solution. First, the method checks whether or
             not the set of hard clauses is satisfiable. If not, the method
@@ -255,7 +256,7 @@ class FM(object):
         else:
             return False
 
-    def _compute(self):
+    def _compute(self) -> None:
         """
             This method implements WMSU1 algorithm. The method is essentially a
             loop, which at each iteration calls the SAT oracle to decide
@@ -278,7 +279,7 @@ class FM(object):
 
                 self.reinit()
 
-    def treat_core(self):
+    def treat_core(self) -> None:
         """
             Now that the previous SAT call returned UNSAT, a new unsatisfiable
             core should be extracted and relaxed. Core extraction is done
@@ -307,7 +308,7 @@ class FM(object):
         # relaxing clauses in the core and adding a new atmost1 constraint
         self.relax_core()
 
-    def split_core(self, minw):
+    def split_core(self, minw: int) -> None:
         """
             Split clauses in the core whenever necessary.
             Given a list of soft clauses in an unsatisfiable core, the method
@@ -345,7 +346,7 @@ class FM(object):
 
                 self.scpy.append(True)
 
-    def relax_core(self):
+    def relax_core(self) -> None:
         """
             Relax and bound the core.
             After unsatisfiable core splitting, this method is called. If the
@@ -388,7 +389,7 @@ class FM(object):
         elif len(self.core) == 1:  # unit core => simply negate the clause
             self.remove_unit_core()
 
-    def remove_unit_core(self):
+    def remove_unit_core(self) -> None:
         """
             If an unsatisfiable core contains only one clause :math:`c`, this
             method is invoked to add a bunch of new unit size hard clauses. As
@@ -401,7 +402,7 @@ class FM(object):
         for l in self.soft[self.core[0]]:
             self.hard.append([-l])
 
-    def oracle_time(self):
+    def oracle_time(self) -> float:
         """
             Method for calculating and reporting the total SAT solving time.
         """
@@ -412,7 +413,7 @@ class FM(object):
 
 #
 # ==============================================================================
-def parse_options():
+def parse_options() -> Tuple[str, int, int, List[str]]:
     """
         Parses command-line option
     """
@@ -453,7 +454,7 @@ def parse_options():
 
 
 # ==============================================================================
-def usage():
+def usage() -> None:
     """
         Prints usage message.
         """

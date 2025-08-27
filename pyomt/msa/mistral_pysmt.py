@@ -11,7 +11,7 @@ from pysmt.shortcuts import Bool, get_model, Not, Solver, qelim, ForAll
 
 def get_qmodel(
     x_univl: Iterable,
-    formula,
+    formula,  # Type not fully specified due to PySMT complexity
     maxiters: Optional[int] = None,
     solver_name: Optional[str] = None,
     verbose: bool = False,
